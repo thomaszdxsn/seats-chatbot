@@ -52,7 +52,7 @@ The application has full AI integration with:
 - System prompt restricting conversations to travel-related topics only
 - Error handling, loading states, and form validation
 - Responsive design with dark mode support
-- Comprehensive test coverage (22/22 tests passing)
+- Comprehensive test coverage (35/35 tests passing)
 
 ### Key Files
 - `src/app/page.tsx`: Main chatbot interface using AI SDK 5.0's `useChat` with `DefaultChatTransport`
@@ -164,7 +164,7 @@ TypeScript is configured with `@/*` alias pointing to `./src/*` directory.
 - Full AI SDK 5.0 integration with transport architecture
 - Google Gemini AI streaming responses  
 - System prompt implementation for travel focus
-- Comprehensive test coverage (22/22 tests passing)
+- Comprehensive test coverage (35/35 tests passing)
 - TypeScript and ESLint compliance
 - Responsive UI with dark mode support
 
