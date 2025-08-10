@@ -1,4 +1,4 @@
-import { google } from '@ai-sdk/google'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { streamText, type CoreMessage } from 'ai'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import { SocksProxyAgent } from 'socks-proxy-agent'
@@ -55,31 +55,33 @@ export async function POST(req: Request) {
       })
     }
 
-    // Configure global proxy for development environment
-    if (isDevelopment) {
-      const proxyUrl = process.env.HTTP_PROXY || process.env.HTTPS_PROXY || process.env.ALL_PROXY
-      if (proxyUrl) {
-        const originalFetch = globalThis.fetch
-        globalThis.fetch = (url: string | URL | Request, options?: RequestInit) => {
-          let agent
-          if (typeof url === 'string' && url.startsWith('https://')) {
-            if (proxyUrl.startsWith('socks://') || proxyUrl.startsWith('socks4://') || proxyUrl.startsWith('socks5://')) {
-              agent = new SocksProxyAgent(proxyUrl)
-            } else {
-              agent = new HttpsProxyAgent(proxyUrl)
-            }
-            return originalFetch(url, {
-              ...options,
-              // @ts-expect-error - Node.js specific agent property
-              agent
-            })
-          }
-          return originalFetch(url, options)
-        }
-      }
-    }
+    // Configure proxy for development environment
+    const proxyUrl = isDevelopment ? (process.env.HTTP_PROXY || process.env.HTTPS_PROXY || process.env.ALL_PROXY) : null
 
-    const model = google(modelName)
+
+
+    // Create custom fetch with proxy support
+    const customFetch = proxyUrl ? (url: string | URL | Request, init?: RequestInit) => {
+      let agent
+      if (proxyUrl.startsWith('socks://') || proxyUrl.startsWith('socks4://') || proxyUrl.startsWith('socks5://')) {
+        agent = new SocksProxyAgent(proxyUrl)
+      } else {
+        agent = new HttpsProxyAgent(proxyUrl)
+      }
+
+      return fetch(url, {
+        ...init,
+        // @ts-expect-error - Node.js specific agent property
+        agent
+      })
+    } : undefined
+
+
+    const googleAI = createGoogleGenerativeAI({
+      apiKey,
+      ...(customFetch && { fetch: customFetch })
+    })
+    const model = googleAI(modelName)
 
     // Convert UI messages to model messages format
     const modelMessages = convertUIMessagesToModelMessages(messages)
@@ -92,15 +94,37 @@ export async function POST(req: Request) {
       temperature: 0.7,
     })
 
-    console.log({ result })
-
     // Return streaming response
     return result.toTextStreamResponse()
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Chat API error:', error)
-    return new Response('Internal server error', {
-      status: 500,
-      headers: { 'Content-Type': 'text/plain' },
+
+    // Determine error type and return appropriate response
+    let errorMessage = 'Internal server error'
+    let statusCode = 500
+
+    if (error instanceof Error) {
+      if (error.name === 'ConnectTimeoutError' || 'code' in error && error.code === 'UND_ERR_CONNECT_TIMEOUT') {
+        errorMessage = 'Connection timeout - Please check your network connection or proxy settings'
+        statusCode = 408
+      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        errorMessage = 'Network error - Unable to connect to AI service'
+        statusCode = 503
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+    }
+
+    return new Response(JSON.stringify({
+      error: errorMessage,
+      type: error instanceof Error ? error.name : 'UnknownError',
+      timestamp: new Date().toISOString()
+    }), {
+      status: statusCode,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
+      },
     })
   }
 }

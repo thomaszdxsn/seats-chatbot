@@ -2,17 +2,27 @@ import { POST } from './route'
 
 // Mock the AI SDK
 jest.mock('@ai-sdk/google', () => ({
-  google: jest.fn(),
+  createGoogleGenerativeAI: jest.fn(),
 }))
 
 jest.mock('ai', () => ({
   streamText: jest.fn(),
 }))
 
-import { google } from '@ai-sdk/google'
+jest.mock('https-proxy-agent', () => ({
+  HttpsProxyAgent: jest.fn(),
+}))
+
+jest.mock('socks-proxy-agent', () => ({
+  SocksProxyAgent: jest.fn(),
+}))
+
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { streamText } from 'ai'
 
-const mockGoogle = google as unknown as jest.Mock
+const mockCreateGoogleGenerativeAI = createGoogleGenerativeAI as unknown as jest.Mock
+const mockGoogleAI = jest.fn()
+const mockModel = { generate: jest.fn() }
 const mockStreamText = streamText as unknown as jest.Mock
 
 describe('/api/chat', () => {
@@ -21,6 +31,10 @@ describe('/api/chat', () => {
   beforeEach(() => {
     jest.resetAllMocks()
     process.env = { ...originalEnv }
+
+    // Setup mock return values
+    mockGoogleAI.mockReturnValue(mockModel)
+    mockCreateGoogleGenerativeAI.mockReturnValue(mockGoogleAI)
   })
 
   afterEach(() => {
@@ -50,9 +64,6 @@ describe('/api/chat', () => {
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'test-api-key'
     delete process.env.GOOGLE_MODEL_NAME
 
-    const mockModel = { generate: jest.fn() }
-    mockGoogle.mockReturnValue(mockModel)
-
     mockStreamText.mockImplementation(() => ({
       toTextStreamResponse: jest.fn().mockReturnValue(new Response('test response')),
     }))
@@ -69,16 +80,16 @@ describe('/api/chat', () => {
 
     await POST(request)
 
-    expect(mockGoogle).toHaveBeenCalledWith('gemini-2.5-flash')
+    expect(mockCreateGoogleGenerativeAI).toHaveBeenCalledWith(expect.objectContaining({
+      apiKey: 'test-api-key'
+    }))
+    expect(mockGoogleAI).toHaveBeenCalledWith('gemini-2.5-flash')
   })
 
   it('uses custom model name when GOOGLE_MODEL_NAME is provided', async () => {
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'test-api-key'
     process.env.GOOGLE_MODEL_NAME = 'gemini-2.5-pro'
 
-    const mockModel = { generate: jest.fn() }
-    mockGoogle.mockReturnValue(mockModel)
-
     mockStreamText.mockImplementation(() => ({
       toTextStreamResponse: jest.fn().mockReturnValue(new Response('test response')),
     }))
@@ -95,15 +106,15 @@ describe('/api/chat', () => {
 
     await POST(request)
 
-    expect(mockGoogle).toHaveBeenCalledWith('gemini-2.5-pro')
+    expect(mockCreateGoogleGenerativeAI).toHaveBeenCalledWith(expect.objectContaining({
+      apiKey: 'test-api-key'
+    }))
+    expect(mockGoogleAI).toHaveBeenCalledWith('gemini-2.5-pro')
   })
 
   it('calls streamText with correct parameters', async () => {
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'test-api-key'
     process.env.GOOGLE_MODEL_NAME = 'gemini-2.5-flash'
-
-    const mockModel = { generate: jest.fn() }
-    mockGoogle.mockReturnValue(mockModel)
 
     mockStreamText.mockImplementation(() => ({
       toTextStreamResponse: jest.fn().mockReturnValue(new Response('test response')),
@@ -136,9 +147,6 @@ describe('/api/chat', () => {
   it('returns streaming response when successful', async () => {
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'test-api-key'
 
-    const mockModel = { generate: jest.fn() }
-    mockGoogle.mockReturnValue(mockModel)
-
     const mockResponse = new Response('streaming response')
     const mockToTextStreamResponse = jest.fn().mockReturnValue(mockResponse)
 
@@ -165,9 +173,6 @@ describe('/api/chat', () => {
   it('handles errors gracefully', async () => {
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'test-api-key'
 
-    const mockModel = { generate: jest.fn() }
-    mockGoogle.mockReturnValue(mockModel)
-
     mockStreamText.mockImplementation(() => {
       throw new Error('AI service unavailable')
     })
@@ -185,31 +190,80 @@ describe('/api/chat', () => {
     const response = await POST(request)
 
     expect(response.status).toBe(500)
-    expect(await response.text()).toBe('Internal server error')
+    expect(response.headers.get('Content-Type')).toBe('application/json')
+
+    const errorData = await response.json()
+    expect(errorData.error).toBe('AI service unavailable')
+    expect(errorData.type).toBe('Error')
+    expect(errorData.timestamp).toBeDefined()
+  })
+
+  it('handles timeout errors specifically', async () => {
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'test-api-key'
+
+    const timeoutError = new Error('Connection timeout')
+    timeoutError.name = 'ConnectTimeoutError'
+
+    mockStreamText.mockImplementation(() => {
+      throw timeoutError
+    })
+
+    const request = new Request('http://localhost:3000/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Hello' }],
+      }),
+    })
+
+    const response = await POST(request)
+
+    expect(response.status).toBe(408)
+
+    const errorData = await response.json()
+    expect(errorData.error).toBe('Connection timeout - Please check your network connection or proxy settings')
+    expect(errorData.type).toBe('ConnectTimeoutError')
+  })
+
+  it('handles network errors specifically', async () => {
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'test-api-key'
+
+    const networkError = new Error('fetch failed')
+    networkError.name = 'TypeError'
+
+    mockStreamText.mockImplementation(() => {
+      throw networkError
+    })
+
+    const request = new Request('http://localhost:3000/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Hello' }],
+      }),
+    })
+
+    const response = await POST(request)
+
+    expect(response.status).toBe(503)
+
+    const errorData = await response.json()
+    expect(errorData.error).toBe('Network error - Unable to connect to AI service')
+    expect(errorData.type).toBe('TypeError')
   })
 
   it('uses proxy in development environment when configured', async () => {
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'test-api-key'
-    process.env.NODE_ENV = 'development'
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true })
     process.env.HTTP_PROXY = 'http://127.0.0.1:8234'
-
-    const mockModel = { generate: jest.fn() }
-    mockGoogle.mockReturnValue(mockModel)
 
     mockStreamText.mockImplementation(() => ({
       toTextStreamResponse: jest.fn().mockReturnValue(new Response('test response')),
     }))
-
-    const originalFetch = globalThis.fetch
-    let proxyUsed = false
-
-    // Mock fetch to detect proxy usage
-    globalThis.fetch = jest.fn((url: string | URL | Request, options?: RequestInit) => {
-      if (options && 'agent' in options) {
-        proxyUsed = true
-      }
-      return originalFetch(url, options)
-    }) as typeof fetch
 
     const request = new Request('http://localhost:3000/api/chat', {
       method: 'POST',
@@ -223,29 +277,25 @@ describe('/api/chat', () => {
 
     await POST(request)
 
+    expect(mockCreateGoogleGenerativeAI).toHaveBeenCalledWith(expect.objectContaining({
+      apiKey: 'test-api-key',
+      fetch: expect.any(Function)
+    }))
+    expect(mockGoogleAI).toHaveBeenCalledWith('gemini-2.5-flash')
+
     // Cleanup
-    globalThis.fetch = originalFetch
     delete process.env.HTTP_PROXY
-    delete process.env.NODE_ENV
+    Object.defineProperty(process.env, 'NODE_ENV', { value: undefined, writable: true })
   })
 
   it('does not use proxy in production environment', async () => {
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'test-api-key'
-    process.env.NODE_ENV = 'production'
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true })
     process.env.HTTP_PROXY = 'http://127.0.0.1:8234'
-
-    const mockModel = { generate: jest.fn() }
-    mockGoogle.mockReturnValue(mockModel)
 
     mockStreamText.mockImplementation(() => ({
       toTextStreamResponse: jest.fn().mockReturnValue(new Response('test response')),
     }))
-
-    const originalFetch = globalThis.fetch
-    const fetchModified = false
-
-    // Store original fetch to check if it gets modified
-    const checkFetch = globalThis.fetch
 
     const request = new Request('http://localhost:3000/api/chat', {
       method: 'POST',
@@ -259,11 +309,16 @@ describe('/api/chat', () => {
 
     await POST(request)
 
-    // In production, fetch should not be modified
-    expect(globalThis.fetch).toBe(checkFetch)
+    expect(mockCreateGoogleGenerativeAI).toHaveBeenCalledWith(expect.objectContaining({
+      apiKey: 'test-api-key'
+    }))
+    expect(mockCreateGoogleGenerativeAI).not.toHaveBeenCalledWith(expect.objectContaining({
+      fetch: expect.any(Function)
+    }))
+    expect(mockGoogleAI).toHaveBeenCalledWith('gemini-2.5-flash')
 
     // Cleanup
     delete process.env.HTTP_PROXY
-    delete process.env.NODE_ENV
+    Object.defineProperty(process.env, 'NODE_ENV', { value: undefined, writable: true })
   })
 })

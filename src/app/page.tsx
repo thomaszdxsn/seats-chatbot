@@ -8,19 +8,47 @@ export default function Home() {
   const [input, setInput] = useState('');
 
   const { messages, sendMessage, status, error } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/chat' }),
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        try {
+          const response = await fetch(input, {
+            ...init,
+            signal: AbortSignal.timeout(30000), // 30 second timeout
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          return response;
+        } catch (err: unknown) {
+          if (err instanceof Error) {
+            if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+              throw new Error('Request timed out. Please check your connection and try again.');
+            } else if (err.name === 'TypeError' && err.message.includes('fetch')) {
+              throw new Error('Network error. Please check your internet connection.');
+            }
+          }
+
+          throw err;
+        }
+      }
+    }),
+    onError: (error) => {
+      console.error('Chat error:', error);
+    },
   });
-  console.log({ messages, status, error })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim()) {
+    if (input.trim() && !isLoading) {
       sendMessage({ text: input });
       setInput('');
     }
   };
 
-  const isLoading = status === 'streaming';
+  const isLoading = status === 'submitted' || status === 'streaming';
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -64,10 +92,13 @@ export default function Home() {
               {isLoading && (
                 <div className="flex justify-start">
                   <div className="bg-gray-200 dark:bg-gray-700 rounded-lg px-4 py-2">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="flex items-center space-x-2">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">AI is thinking...</span>
                     </div>
                   </div>
                 </div>
@@ -78,7 +109,20 @@ export default function Home() {
 
         {error && (
           <div className="bg-red-100 dark:bg-red-900/20 border border-red-400 text-red-700 dark:text-red-400 px-4 py-3 rounded mb-4">
-            <strong>Error:</strong> {error.message}
+            <div className="flex items-center justify-between">
+              <div>
+                <strong>Connection Error:</strong> {error.message}
+              </div>
+              <button
+                onClick={() => window.location.reload()}
+                className="text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+            <p className="text-sm mt-2 opacity-75">
+              Please check your network connection or proxy settings, then click the retry button.
+            </p>
           </div>
         )}
 
@@ -87,16 +131,23 @@ export default function Home() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Enter your travel questions..."
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+            placeholder={isLoading ? "Please wait for AI response..." : "Enter your travel questions..."}
+            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           >
-            Send
+            {isLoading ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Sending</span>
+              </div>
+            ) : (
+              'Send'
+            )}
           </button>
         </form>
       </div>
