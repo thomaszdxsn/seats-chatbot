@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     const model = google(modelName)
 
     // Create the stream with system prompt
-    const result = await streamText({
+    const result = streamText({
       model,
       system: SYSTEM_PROMPT,
       messages: messages,

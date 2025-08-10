@@ -9,8 +9,11 @@ jest.mock('ai', () => ({
   streamText: jest.fn(),
 }))
 
-const mockGoogle = require('@ai-sdk/google').google as jest.Mock
-const mockStreamText = require('ai').streamText as jest.Mock
+import { google } from '@ai-sdk/google'
+import { streamText } from 'ai'
+
+const mockGoogle = google as jest.Mock
+const mockStreamText = streamText as jest.Mock
 
 describe('/api/chat', () => {
   const originalEnv = process.env
@@ -50,10 +53,9 @@ describe('/api/chat', () => {
     const mockModel = { generate: jest.fn() }
     mockGoogle.mockReturnValue(mockModel)
 
-    const mockResult = {
-      toDataStreamResponse: jest.fn().mockReturnValue(new Response('test response')),
-    }
-    mockStreamText.mockResolvedValue(mockResult)
+    mockStreamText.mockImplementation(() => ({
+      toTextStreamResponse: jest.fn().mockReturnValue(new Response('test response')),
+    }))
 
     const request = new Request('http://localhost:3000/api/chat', {
       method: 'POST',
@@ -77,10 +79,9 @@ describe('/api/chat', () => {
     const mockModel = { generate: jest.fn() }
     mockGoogle.mockReturnValue(mockModel)
 
-    const mockResult = {
-      toDataStreamResponse: jest.fn().mockReturnValue(new Response('test response')),
-    }
-    mockStreamText.mockResolvedValue(mockResult)
+    mockStreamText.mockImplementation(() => ({
+      toTextStreamResponse: jest.fn().mockReturnValue(new Response('test response')),
+    }))
 
     const request = new Request('http://localhost:3000/api/chat', {
       method: 'POST',
@@ -104,10 +105,9 @@ describe('/api/chat', () => {
     const mockModel = { generate: jest.fn() }
     mockGoogle.mockReturnValue(mockModel)
 
-    const mockResult = {
-      toDataStreamResponse: jest.fn().mockReturnValue(new Response('test response')),
-    }
-    mockStreamText.mockResolvedValue(mockResult)
+    mockStreamText.mockImplementation(() => ({
+      toTextStreamResponse: jest.fn().mockReturnValue(new Response('test response')),
+    }))
 
     const testMessages = [
       { role: 'user', content: 'I want to book a flight to Paris' },
@@ -140,10 +140,11 @@ describe('/api/chat', () => {
     mockGoogle.mockReturnValue(mockModel)
 
     const mockResponse = new Response('streaming response')
-    const mockResult = {
-      toTextStreamResponse: jest.fn().mockReturnValue(mockResponse),
-    }
-    mockStreamText.mockResolvedValue(mockResult)
+    const mockToTextStreamResponse = jest.fn().mockReturnValue(mockResponse)
+    
+    mockStreamText.mockImplementation(() => ({
+      toTextStreamResponse: mockToTextStreamResponse,
+    }))
 
     const request = new Request('http://localhost:3000/api/chat', {
       method: 'POST',
@@ -158,7 +159,7 @@ describe('/api/chat', () => {
     const response = await POST(request)
 
     expect(response).toBe(mockResponse)
-    expect(mockResult.toTextStreamResponse).toHaveBeenCalled()
+    expect(mockToTextStreamResponse).toHaveBeenCalled()
   })
 
   it('handles errors gracefully', async () => {
@@ -167,7 +168,9 @@ describe('/api/chat', () => {
     const mockModel = { generate: jest.fn() }
     mockGoogle.mockReturnValue(mockModel)
 
-    mockStreamText.mockRejectedValue(new Error('AI service unavailable'))
+    mockStreamText.mockImplementation(() => {
+      throw new Error('AI service unavailable')
+    })
 
     const request = new Request('http://localhost:3000/api/chat', {
       method: 'POST',

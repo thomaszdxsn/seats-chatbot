@@ -11,6 +11,14 @@ global.TextDecoder = TextDecoder
 global.Response = Response
 global.Request = Request
 
+// Mock TransformStream for AI SDK
+global.TransformStream = class {
+  constructor(transformer) {
+    this.readable = new ReadableStream()
+    this.writable = new WritableStream()
+  }
+}
+
 // Note: MSW setup temporarily disabled due to polyfill conflicts
 // Will be enabled when AI integration is implemented
 
