@@ -12,8 +12,8 @@ jest.mock('ai', () => ({
 import { google } from '@ai-sdk/google'
 import { streamText } from 'ai'
 
-const mockGoogle = google as jest.Mock
-const mockStreamText = streamText as jest.Mock
+const mockGoogle = google as unknown as jest.Mock
+const mockStreamText = streamText as unknown as jest.Mock
 
 describe('/api/chat', () => {
   const originalEnv = process.env
@@ -27,8 +27,8 @@ describe('/api/chat', () => {
     process.env = originalEnv
   })
 
-  it('returns error when GEMINI_API_KEY is not provided', async () => {
-    delete process.env.GEMINI_API_KEY
+  it('returns error when GOOGLE_API_KEY is not provided', async () => {
+    delete process.env.GOOGLE_API_KEY
 
     const request = new Request('http://localhost:3000/api/chat', {
       method: 'POST',
@@ -43,12 +43,12 @@ describe('/api/chat', () => {
     const response = await POST(request)
 
     expect(response.status).toBe(500)
-    expect(await response.text()).toBe('GEMINI_API_KEY is not configured')
+    expect(await response.text()).toBe('GOOGLE_API_KEY is not configured')
   })
 
-  it('uses default model name when GEMINI_MODEL_NAME is not provided', async () => {
-    process.env.GEMINI_API_KEY = 'test-api-key'
-    delete process.env.GEMINI_MODEL_NAME
+  it('uses default model name when GOOGLE_MODEL_NAME is not provided', async () => {
+    process.env.GOOGLE_API_KEY = 'test-api-key'
+    delete process.env.GOOGLE_MODEL_NAME
 
     const mockModel = { generate: jest.fn() }
     mockGoogle.mockReturnValue(mockModel)
@@ -72,9 +72,9 @@ describe('/api/chat', () => {
     expect(mockGoogle).toHaveBeenCalledWith('gemini-2.5-flash')
   })
 
-  it('uses custom model name when GEMINI_MODEL_NAME is provided', async () => {
-    process.env.GEMINI_API_KEY = 'test-api-key'
-    process.env.GEMINI_MODEL_NAME = 'gemini-2.5-pro'
+  it('uses custom model name when GOOGLE_MODEL_NAME is provided', async () => {
+    process.env.GOOGLE_API_KEY = 'test-api-key'
+    process.env.GOOGLE_MODEL_NAME = 'gemini-2.5-pro'
 
     const mockModel = { generate: jest.fn() }
     mockGoogle.mockReturnValue(mockModel)
@@ -99,8 +99,8 @@ describe('/api/chat', () => {
   })
 
   it('calls streamText with correct parameters', async () => {
-    process.env.GEMINI_API_KEY = 'test-api-key'
-    process.env.GEMINI_MODEL_NAME = 'gemini-2.5-flash'
+    process.env.GOOGLE_API_KEY = 'test-api-key'
+    process.env.GOOGLE_MODEL_NAME = 'gemini-2.5-flash'
 
     const mockModel = { generate: jest.fn() }
     mockGoogle.mockReturnValue(mockModel)
@@ -134,7 +134,7 @@ describe('/api/chat', () => {
   })
 
   it('returns streaming response when successful', async () => {
-    process.env.GEMINI_API_KEY = 'test-api-key'
+    process.env.GOOGLE_API_KEY = 'test-api-key'
 
     const mockModel = { generate: jest.fn() }
     mockGoogle.mockReturnValue(mockModel)
@@ -163,7 +163,7 @@ describe('/api/chat', () => {
   })
 
   it('handles errors gracefully', async () => {
-    process.env.GEMINI_API_KEY = 'test-api-key'
+    process.env.GOOGLE_API_KEY = 'test-api-key'
 
     const mockModel = { generate: jest.fn() }
     mockGoogle.mockReturnValue(mockModel)

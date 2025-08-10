@@ -50,10 +50,10 @@ pnpm dev
 
 ```bash
 # Google AI API Key (获取地址: https://aistudio.google.com/app/apikey)
-GEMINI_API_KEY=your_gemini_api_key_here
+GOOGLE_API_KEY=your_google_api_key_here
 
-# Gemini Model Name (可选，默认使用 gemini-2.5-flash)
-GEMINI_MODEL_NAME=gemini-2.5-flash
+# Google Model Name (可选，默认使用 gemini-2.5-flash)
+GOOGLE_MODEL_NAME=gemini-2.5-flash
 ```
 
 可用的模型：

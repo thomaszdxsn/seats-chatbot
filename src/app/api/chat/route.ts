@@ -22,11 +22,11 @@ export async function POST(req: Request) {
     const { messages } = await req.json()
 
     // Validate required environment variables
-    const apiKey = process.env.GEMINI_API_KEY
-    const modelName = process.env.GEMINI_MODEL_NAME || 'gemini-2.5-flash'
+    const apiKey = process.env.GOOGLE_API_KEY
+    const modelName = process.env.GOOGLE_MODEL_NAME || 'gemini-2.5-flash'
 
     if (!apiKey) {
-      return new Response('GEMINI_API_KEY is not configured', {
+      return new Response('GOOGLE_API_KEY is not configured', {
         status: 500,
         headers: { 'Content-Type': 'text/plain' },
       })

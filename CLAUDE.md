@@ -20,99 +20,134 @@ pnpm test          # Run tests
 pnpm test:watch    # Run tests in watch mode
 pnpm test:coverage # Run tests with coverage report
 pnpm test:ci       # Run tests in CI mode
+
+# Run specific test files
+pnpm test src/app/page.test.tsx
+pnpm test src/app/api/chat/route.test.ts
 ```
 
 ## Tech Stack & Dependencies
 
 - **Framework**: Next.js 15 with App Router
-- **AI Integration**: AI SDK (`ai`) with Google Gemini provider (`@ai-sdk/google`)
+- **AI Integration**: AI SDK 5.0 (`ai`) with AI SDK React (`@ai-sdk/react`) and Google Gemini provider (`@ai-sdk/google`)
 - **Styling**: TailwindCSS v4 (with PostCSS plugin)
 - **Language**: TypeScript with strict mode
 - **Linting**: ESLint with Next.js configuration
-- **Testing**: Jest with React Testing Library and MSW for API mocking
+- **Testing**: Jest with React Testing Library, includes MSW for future API mocking
 
 ## Architecture
 
+### AI SDK 5.0 Integration
+The project uses **AI SDK 5.0** with the new transport-based architecture:
+- `useChat` hook from `@ai-sdk/react` with `DefaultChatTransport`
+- Manual input state management (no more built-in input/handleInputChange)
+- New `sendMessage` API that accepts `{ text: string }` objects
+- Status-based loading states (`status === 'streaming'`)
+- Message structure uses `parts` arrays with `{ type: 'text', text: string }` objects
+
 ### Current State
-The application now has full AI integration with:
-- Complete chatbot UI implemented in `src/app/page.tsx` using AI SDK's useChat hook
-- Google Gemini AI integration via API routes
-- Real-time streaming responses from Gemini 2.5 Flash
-- System prompt restricting conversations to travel-related topics
-- Error handling and loading states
+The application has full AI integration with:
+- Complete chatbot UI implemented in `src/app/page.tsx` using AI SDK 5.0's transport pattern
+- Google Gemini AI integration via API routes with streaming responses
+- System prompt restricting conversations to travel-related topics only
+- Error handling, loading states, and form validation
 - Responsive design with dark mode support
+- Comprehensive test coverage (22/22 tests passing)
 
 ### Key Files
-- `src/app/page.tsx`: Main chatbot interface using AI SDK's useChat hook
-- `src/app/api/chat/route.ts`: API route handling Gemini AI requests
-- `src/app/layout.tsx`: Root layout with Geist fonts
-- `PRPs/1-setup.md`: Original project requirements document (Chinese)
-- `PRPs/2-connect-gemini.md`: Gemini integration requirements
+- `src/app/page.tsx`: Main chatbot interface using AI SDK 5.0's `useChat` with `DefaultChatTransport`
+- `src/app/api/chat/route.ts`: API route handling Gemini AI requests with `streamText`
+- `src/app/layout.tsx`: Root layout with Geist fonts and metadata
+- `src/app/page.test.tsx`: Comprehensive frontend tests with AI SDK mocking
+- `src/app/api/chat/route.test.ts`: API endpoint tests with proper mock strategies
+- `jest.setup.js`: Test environment setup with necessary polyfills (including `TransformStream`)
 
-### Message Flow
-1. User input is managed by AI SDK's useChat hook
-2. Messages are sent to `/api/chat` endpoint via POST request
-3. API route validates environment variables and initializes Gemini model
-4. System prompt ensures responses stay travel-focused
-5. Gemini generates streaming response with travel assistance
-6. Frontend receives and displays real-time streaming text
+### Message Flow (AI SDK 5.0)
+1. User input is managed by local React state (`useState`)
+2. Form submission calls `sendMessage({ text: input })` from `useChat` hook
+3. Transport sends POST request to `/api/chat` endpoint
+4. API route validates environment variables and initializes Gemini model
+5. System prompt ensures responses stay travel-focused
+6. `streamText` generates streaming response via Gemini
+7. Frontend receives real-time streaming updates through transport layer
+8. Messages are rendered using `message.parts[].text` structure
 
 ### API Integration
 - **Endpoint**: `POST /api/chat`
-- **Model**: Google Gemini 2.5 Flash (configurable)
-- **Features**: Streaming responses, system prompts, error handling
-- **Authentication**: API key via environment variables
+- **Model**: Google Gemini 2.5 Flash (configurable via environment)
+- **Features**: Streaming responses with `streamText`, system prompts, comprehensive error handling
+- **Authentication**: API key via `GOOGLE_API_KEY` environment variable
+- **Transport**: Uses AI SDK 5.0's transport-based architecture
 
 ## Environment Setup
 
 Create `.env.local` with:
 ```bash
 # Required: Get from https://aistudio.google.com/app/apikey  
-GEMINI_API_KEY=your_gemini_api_key_here
+GOOGLE_API_KEY=your_google_api_key_here
 
 # Optional: Defaults to gemini-2.5-flash
-GEMINI_MODEL_NAME=gemini-2.5-flash
+GOOGLE_MODEL_NAME=gemini-2.5-flash
 ```
 
 Available models: gemini-2.5-flash, gemini-2.5-pro, gemini-1.5-flash, gemini-1.5-pro
 
-## Next Steps (Based on PRPs)
+## Testing Architecture
 
-1. ✅ ~~Implement AI integration with Google Gemini~~
-2. ✅ ~~Add system prompts to restrict conversation scope~~  
-3. Add travel-specific functionality (hotel booking, flight queries)
-4. Evaluate need for additional frameworks like LangChain/LangGraph
-5. Implement comprehensive testing suite following TDD approach
+### Test Environment
+- Jest 30.0.5 with jsdom environment
+- React Testing Library for component testing
+- Custom polyfills for AI SDK compatibility (TransformStream, TextEncoder/Decoder)
+- MSW available but temporarily disabled due to polyfill conflicts
+
+### Key Test Patterns
+- **AI SDK Mocking**: Mock `@ai-sdk/react` module and provide mock `useChat` return values
+- **Transport Testing**: Mock transport objects when testing `useChat` configuration
+- **Message Structure**: Use `{ id, role, parts: [{ type: 'text', text }] }` format for mock messages
+- **Status Testing**: Use `status: 'streaming'` for loading state tests
+- **API Testing**: Mock `streamText` with `mockImplementation` returning objects with `toTextStreamResponse`
+
+### Running Tests
+```bash
+pnpm test                    # Run all tests
+pnpm test:watch             # Run tests in watch mode  
+pnpm test:coverage          # Generate coverage report
+pnpm test src/app/page.test.tsx -t "specific test name"  # Run specific test
+```
+
+## Common Development Tasks
+
+### Adding New AI Features
+1. Modify the `SYSTEM_PROMPT` in `src/app/api/chat/route.ts`
+2. Update message handling in `src/app/page.tsx` if needed
+3. Add corresponding tests using the established mocking patterns
+
+### Debugging AI SDK Issues
+- Check `jest.setup.js` for required polyfills
+- Ensure mock patterns match AI SDK 5.0 API (transport, sendMessage, status)
+- Use `console.log` in tests to inspect message structures when debugging
+
+### TypeScript Configuration
+- Strict mode enabled with `@/*` alias pointing to `./src/*`
+- Custom type definitions in `src/types/jest-dom.d.ts`
+- ESLint configured to enforce ES6 imports (no `require()` statements)
 
 ## Import Aliases
 
 TypeScript is configured with `@/*` alias pointing to `./src/*` directory.
 
-## Testing
+## Current Status
 
-### Test Structure
-- Tests are located in `src/__tests__/` and alongside components (`.test.tsx`)
-- Custom test utilities in `src/__tests__/utils/test-utils.tsx`
-- MSW handlers for API mocking in `src/__tests__/mocks/`
+✅ **Completed**:
+- Full AI SDK 5.0 integration with transport architecture
+- Google Gemini AI streaming responses  
+- System prompt implementation for travel focus
+- Comprehensive test coverage (22/22 tests passing)
+- TypeScript and ESLint compliance
+- Responsive UI with dark mode support
 
-### Key Test Files
-- `src/app/page.test.tsx`: Comprehensive tests for the main chatbot component
-- `jest.config.js`: Jest configuration with Next.js integration
-- `jest.setup.js`: Global test setup and mocks
-
-### Test Coverage
-Current test coverage includes:
-- Component rendering and UI elements
-- User interactions (typing, clicking, form submission)
-- Message state management
-- Loading states and form validation
-- API mocking setup for future AI integration
-
-## Development Notes
-
-- The UI is fully responsive and supports dark mode
-- All user-facing text is in English
-- Loading states are implemented with animated dots
-- Form submission prevents empty messages
-- Error handling is basic (console.error only)
-- Comprehensive test suite follows TDD practices
+🚧 **Next Steps** (based on project requirements):
+- Implement specific travel booking functionality
+- Add hotel and flight search features
+- Enhance system prompts for more sophisticated travel assistance
+- Consider LangChain/LangGraph integration for complex workflows
