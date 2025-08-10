@@ -11,6 +11,7 @@
 - 使用 TailwindCSS
 - 使用 TypeScript
 - 基于 TDD 的模式进行开发
+- 使用 pnpm 进行包管理
 
 # 在这个 task 中你需要做什么
 

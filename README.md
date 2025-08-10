@@ -12,6 +12,7 @@
 - **语言**: TypeScript
 - **样式**: TailwindCSS
 - **AI 集成**: AI SDK with Google Gemini
+- **包管理器**: pnpm
 - **开发模式**: Test-Driven Development (TDD)
 
 ## 功能特性
@@ -27,18 +28,18 @@
 ### 环境要求
 
 - Node.js 18+
-- npm 或 yarn
+- pnpm
 
 ### 安装依赖
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 启动开发服务器
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 打开 [http://localhost:3000](http://localhost:3000) 查看应用。
@@ -80,7 +81,7 @@ seats-chatbot/
 推荐使用 [Vercel](https://vercel.com) 进行部署：
 
 ```bash
-npm run build
+pnpm build
 ```
 
 ## 贡献指南
