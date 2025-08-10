@@ -31,6 +31,7 @@ pnpm test src/app/api/chat/route.test.ts
 - **Framework**: Next.js 15 with App Router
 - **AI Integration**: AI SDK 5.0 (`ai`) with AI SDK React (`@ai-sdk/react`) and Google Gemini provider (`@ai-sdk/google`)
 - **Styling**: TailwindCSS v4 (with PostCSS plugin)
+- **UI Components**: Modular component architecture with markdown support via `react-markdown`
 - **Language**: TypeScript with strict mode
 - **Linting**: ESLint with Next.js configuration
 - **Testing**: Jest with React Testing Library, includes MSW for future API mocking
@@ -52,14 +53,25 @@ The application has full AI integration with:
 - System prompt restricting conversations to travel-related topics only
 - Error handling, loading states, and form validation
 - Responsive design with dark mode support
-- Comprehensive test coverage (37/37 tests passing)
+- Comprehensive test coverage (76/76 tests passing)
 
 ### Key Files
 - `src/app/page.tsx`: Main chatbot interface using AI SDK 5.0's `useChat` with `DefaultChatTransport`
 - `src/app/api/chat/route.ts`: API route handling Gemini AI requests with `streamText` and multilingual support
 - `src/app/layout.tsx`: Root layout with Geist fonts and metadata
+- `src/components/`: Modular UI components directory
+  - `Message.tsx`: Individual message component with markdown rendering support
+  - `MessageList.tsx`: Message container with loading states and empty state
+  - `ChatInput.tsx`: Input form component with validation and loading states
+  - `ErrorDisplay.tsx`: Error handling component with retry functionality
+- `src/lib/`: Utility functions directory
+  - `proxy-config.ts`: Proxy configuration and Google AI client setup
+  - `error-handler.ts`: Centralized error handling utilities
+  - `message-converter.ts`: Message format conversion utilities
+  - `system-prompt.ts`: Centralized system prompt configuration
 - `src/app/page.test.tsx`: Comprehensive frontend tests with AI SDK mocking
 - `src/app/api/chat/route.test.ts`: API endpoint tests with proper mock strategies and multilingual testing
+- `src/components/*.test.tsx`: Individual component tests with comprehensive coverage
 - `jest.setup.js`: Test environment setup with necessary polyfills (including `TransformStream`)
 
 ### Message Flow (AI SDK 5.0)
@@ -209,7 +221,7 @@ TypeScript is configured with `@/*` alias pointing to `./src/*` directory.
 - Full AI SDK 5.0 integration with transport architecture
 - Google Gemini AI streaming responses  
 - System prompt implementation for travel focus with multilingual support
-- Comprehensive test coverage (37/37 tests passing)
+- Comprehensive test coverage (76/76 tests passing)
 - TypeScript and ESLint compliance
 - Responsive UI with dark mode support
 
