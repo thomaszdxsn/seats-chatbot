@@ -15,6 +15,7 @@
 
 # testing
 /coverage
+jest.config.js.bak
 
 # next.js
 /.next/

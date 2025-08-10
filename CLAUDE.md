@@ -11,11 +11,15 @@ This is a travel AI chatbot built with Next.js, designed to help users with trav
 This project uses **pnpm** as the package manager. Always use pnpm commands:
 
 ```bash
-pnpm install     # Install dependencies
-pnpm dev         # Start development server
-pnpm build       # Build for production
-pnpm start       # Start production server
-pnpm lint        # Run ESLint
+pnpm install       # Install dependencies
+pnpm dev           # Start development server
+pnpm build         # Build for production
+pnpm start         # Start production server
+pnpm lint          # Run ESLint
+pnpm test          # Run tests
+pnpm test:watch    # Run tests in watch mode
+pnpm test:coverage # Run tests with coverage report
+pnpm test:ci       # Run tests in CI mode
 ```
 
 ## Tech Stack & Dependencies
@@ -25,10 +29,7 @@ pnpm lint        # Run ESLint
 - **Styling**: TailwindCSS v4 (with PostCSS plugin)
 - **Language**: TypeScript with strict mode
 - **Linting**: ESLint with Next.js configuration
-
-## Tech Requirements
-
-- Use english as UI language, not chinese
+- **Testing**: Jest with React Testing Library and MSW for API mocking
 
 ## Architecture
 
@@ -68,6 +69,26 @@ GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
 
 TypeScript is configured with `@/*` alias pointing to `./src/*` directory.
 
+## Testing
+
+### Test Structure
+- Tests are located in `src/__tests__/` and alongside components (`.test.tsx`)
+- Custom test utilities in `src/__tests__/utils/test-utils.tsx`
+- MSW handlers for API mocking in `src/__tests__/mocks/`
+
+### Key Test Files
+- `src/app/page.test.tsx`: Comprehensive tests for the main chatbot component
+- `jest.config.js`: Jest configuration with Next.js integration
+- `jest.setup.js`: Global test setup and mocks
+
+### Test Coverage
+Current test coverage includes:
+- Component rendering and UI elements
+- User interactions (typing, clicking, form submission)
+- Message state management
+- Loading states and form validation
+- API mocking setup for future AI integration
+
 ## Development Notes
 
 - The UI is fully responsive and supports dark mode
@@ -75,3 +96,4 @@ TypeScript is configured with `@/*` alias pointing to `./src/*` directory.
 - Loading states are implemented with animated dots
 - Form submission prevents empty messages
 - Error handling is basic (console.error only)
+- Comprehensive test suite follows TDD practices
