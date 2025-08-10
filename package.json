@@ -16,9 +16,11 @@
     "@ai-sdk/google": "^2.0.3",
     "@ai-sdk/react": "^2.0.9",
     "ai": "^5.0.9",
+    "https-proxy-agent": "^7.0.6",
     "next": "15.4.6",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "socks-proxy-agent": "^8.0.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

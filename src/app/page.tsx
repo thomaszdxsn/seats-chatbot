@@ -10,6 +10,7 @@ export default function Home() {
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat' }),
   });
+  console.log({ messages, status, error })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,11 +48,11 @@ export default function Home() {
                 >
                   <div
                     className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.role === 'user'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white'
                       }`}
                   >
-{message.parts?.map((part, index: number) => {
+                    {message.parts?.map((part, index: number) => {
                       if (part.type === 'text') {
                         return <span key={index}>{part.text}</span>;
                       }

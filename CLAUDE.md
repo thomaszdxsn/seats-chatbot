@@ -76,7 +76,7 @@ The application has full AI integration with:
 - **Endpoint**: `POST /api/chat`
 - **Model**: Google Gemini 2.5 Flash (configurable via environment)
 - **Features**: Streaming responses with `streamText`, system prompts, comprehensive error handling
-- **Authentication**: API key via `GOOGLE_API_KEY` environment variable
+- **Authentication**: API key via `GOOGLE_GENERATIVE_AI_API_KEY` environment variable
 - **Transport**: Uses AI SDK 5.0's transport-based architecture
 
 ## Environment Setup
@@ -84,13 +84,35 @@ The application has full AI integration with:
 Create `.env.local` with:
 ```bash
 # Required: Get from https://aistudio.google.com/app/apikey  
-GOOGLE_API_KEY=your_google_api_key_here
+GOOGLE_GENERATIVE_AI_API_KEY=your_google_api_key_here
 
 # Optional: Defaults to gemini-2.5-flash
 GOOGLE_MODEL_NAME=gemini-2.5-flash
+
+# Development proxy settings (only used in development environment)
+# Useful for China mainland users to bypass network restrictions
+HTTP_PROXY=http://127.0.0.1:8234
+HTTPS_PROXY=http://127.0.0.1:8234
+ALL_PROXY=socks5://127.0.0.1:8235
+
+# Note: Proxy settings are automatically ignored in production builds
 ```
 
 Available models: gemini-2.5-flash, gemini-2.5-pro, gemini-1.5-flash, gemini-1.5-pro
+
+### Proxy Configuration (Development Only)
+
+For China mainland users experiencing connection timeouts during development:
+
+1. **Development Environment**: Proxy settings are automatically used when `NODE_ENV !== 'production'`
+2. **Production Environment**: Proxy settings are ignored for security and performance
+3. **Supported Protocols**: HTTP, HTTPS, and SOCKS5 proxies
+4. **Configuration**: Set environment variables in `.env.local`:
+   - `HTTP_PROXY=http://127.0.0.1:8234`
+   - `HTTPS_PROXY=http://127.0.0.1:8234` 
+   - `ALL_PROXY=socks5://127.0.0.1:8235`
+
+The application automatically detects and uses the configured proxy only during development.
 
 ## Testing Architecture
 
