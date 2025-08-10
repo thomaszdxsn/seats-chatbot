@@ -52,7 +52,7 @@ The application has full AI integration with:
 - System prompt restricting conversations to travel-related topics only
 - Error handling, loading states, and form validation
 - Responsive design with dark mode support
-- Comprehensive test coverage (35/35 tests passing)
+- Comprehensive test coverage (36/36 tests passing)
 
 ### Key Files
 - `src/app/page.tsx`: Main chatbot interface using AI SDK 5.0's `useChat` with `DefaultChatTransport`
@@ -68,14 +68,14 @@ The application has full AI integration with:
 3. Transport sends POST request to `/api/chat` endpoint
 4. API route validates environment variables and initializes Gemini model
 5. System prompt ensures responses stay travel-focused
-6. `streamText` generates streaming response via Gemini
+6. `streamText` generates UI message streaming response via Gemini using `toUIMessageStreamResponse`
 7. Frontend receives real-time streaming updates through transport layer
 8. Messages are rendered using `message.parts[].text` structure
 
 ### API Integration
 - **Endpoint**: `POST /api/chat`
 - **Model**: Google Gemini 2.5 Flash (configurable via environment)
-- **Features**: Streaming responses with `streamText`, system prompts, comprehensive error handling
+- **Features**: UI message streaming with `toUIMessageStreamResponse`, system prompts, comprehensive error handling
 - **Authentication**: API key via `GOOGLE_GENERATIVE_AI_API_KEY` environment variable
 - **Transport**: Uses AI SDK 5.0's transport-based architecture
 
@@ -89,30 +89,56 @@ GOOGLE_GENERATIVE_AI_API_KEY=your_google_api_key_here
 # Optional: Defaults to gemini-2.5-flash
 GOOGLE_MODEL_NAME=gemini-2.5-flash
 
-# Development proxy settings (only used in development environment)
-# Useful for China mainland users to bypass network restrictions
-HTTP_PROXY=http://127.0.0.1:8234
-HTTPS_PROXY=http://127.0.0.1:8234
-ALL_PROXY=socks5://127.0.0.1:8235
+# === PROXY CONFIGURATION FOR CHINA MAINLAND USERS ===
 
-# Note: Proxy settings are automatically ignored in production builds
+# Option 1: Use China-specific proxy service (Recommended)
+USE_CHINA_PROXY=true
+# Optional: Custom China proxy URL (defaults to https://api.genai.gd.edu.kg/google)
+# CHINA_PROXY_URL=https://your-custom-proxy.example.com/google
+
+# Option 2: Traditional proxy settings (HTTP/HTTPS/SOCKS)
+# Use these if you have your own proxy server or VPN
+# HTTP_PROXY=http://127.0.0.1:8234
+# HTTPS_PROXY=http://127.0.0.1:8234
+# ALL_PROXY=socks5://127.0.0.1:8235
+
+# Note: Proxy settings only work in development environment
+# In production (Vercel deployment), proxy settings are ignored for performance
 ```
 
 Available models: gemini-2.5-flash, gemini-2.5-pro, gemini-1.5-flash, gemini-1.5-pro
 
-### Proxy Configuration (Development Only)
+### Proxy Configuration for China Mainland Users
 
-For China mainland users experiencing connection timeouts during development:
+For users in China experiencing connection timeouts when accessing Google Gemini API:
 
-1. **Development Environment**: Proxy settings are automatically used when `NODE_ENV !== 'production'`
-2. **Production Environment**: Proxy settings are ignored for security and performance
-3. **Supported Protocols**: HTTP, HTTPS, and SOCKS5 proxies
-4. **Configuration**: Set environment variables in `.env.local`:
+#### Option 1: China-Specific Proxy Service (Recommended)
+1. Set `USE_CHINA_PROXY=true` in your `.env.local`
+2. The app uses `https://api.genai.gd.edu.kg/google` as the default proxy
+3. Optionally customize with `CHINA_PROXY_URL=your-proxy-url`
+
+#### Option 2: Traditional Proxy (VPN/SOCKS/HTTP)
+1. **Supported Protocols**: HTTP, HTTPS, and SOCKS5 proxies
+2. **Configuration**: Set environment variables in `.env.local`:
    - `HTTP_PROXY=http://127.0.0.1:8234`
-   - `HTTPS_PROXY=http://127.0.0.1:8234` 
+   - `HTTPS_PROXY=http://127.0.0.1:8234`
    - `ALL_PROXY=socks5://127.0.0.1:8235`
 
-The application automatically detects and uses the configured proxy only during development.
+#### Option 3: Custom Cloudflare Workers Proxy
+You can set up your own Cloudflare Workers proxy:
+```javascript
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    url.host = 'generativelanguage.googleapis.com';
+    return fetch(new Request(url, request))
+  }
+}
+```
+
+**Important**: Proxy configurations only work in development environment (`NODE_ENV !== 'production'`). In production deployments (such as Vercel), proxy settings are automatically disabled for performance and security reasons.
+
+The application automatically detects the appropriate proxy configuration and logs the chosen method for debugging during development.
 
 ## Testing Architecture
 
@@ -127,7 +153,7 @@ The application automatically detects and uses the configured proxy only during 
 - **Transport Testing**: Mock transport objects when testing `useChat` configuration
 - **Message Structure**: Use `{ id, role, parts: [{ type: 'text', text }] }` format for mock messages
 - **Status Testing**: Use `status: 'streaming'` for loading state tests
-- **API Testing**: Mock `streamText` with `mockImplementation` returning objects with `toTextStreamResponse`
+- **API Testing**: Mock `streamText` with `mockImplementation` returning objects with `toUIMessageStreamResponse`
 
 ### Running Tests
 ```bash
@@ -164,7 +190,7 @@ TypeScript is configured with `@/*` alias pointing to `./src/*` directory.
 - Full AI SDK 5.0 integration with transport architecture
 - Google Gemini AI streaming responses  
 - System prompt implementation for travel focus
-- Comprehensive test coverage (35/35 tests passing)
+- Comprehensive test coverage (36/36 tests passing)
 - TypeScript and ESLint compliance
 - Responsive UI with dark mode support
 

@@ -47,6 +47,13 @@ export async function POST(req: Request) {
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
     const modelName = process.env.GOOGLE_MODEL_NAME || 'gemini-2.5-flash'
     const isDevelopment = process.env.NODE_ENV !== 'production'
+    
+    // Only enable proxy in development environment (not in production/Vercel)
+    const needsProxy = isDevelopment && (process.env.USE_CHINA_PROXY === 'true' || process.env.CHINA_PROXY_URL)
+    const chinaProxyUrl = process.env.CHINA_PROXY_URL || 'https://api.genai.gd.edu.kg/google'
+    
+    // Traditional proxy configuration (for VPN/SOCKS/HTTP proxies) - development only
+    const proxyUrl = isDevelopment ? (process.env.HTTP_PROXY || process.env.HTTPS_PROXY || process.env.ALL_PROXY) : null
 
     if (!apiKey) {
       return new Response('GOOGLE_GENERATIVE_AI_API_KEY is not configured', {
@@ -55,32 +62,52 @@ export async function POST(req: Request) {
       })
     }
 
-    // Configure proxy for development environment
-    const proxyUrl = isDevelopment ? (process.env.HTTP_PROXY || process.env.HTTPS_PROXY || process.env.ALL_PROXY) : null
+    console.log('Proxy configuration:', {
+      needsProxy,
+      chinaProxyUrl: needsProxy ? chinaProxyUrl : 'not used',
+      traditionalProxy: proxyUrl ? 'configured' : 'not configured'
+    })
 
+    // Create Google AI client with appropriate configuration
+    let googleAI
 
+    if (needsProxy) {
+      // Option 1: Use China-specific proxy service (recommended for China mainland users)
+      console.log('Using China proxy service:', chinaProxyUrl)
+      googleAI = createGoogleGenerativeAI({
+        apiKey,
+        baseURL: chinaProxyUrl + '/v1beta'
+      })
+    } else if (proxyUrl) {
+      // Option 2: Use traditional proxy (HTTP/HTTPS/SOCKS)
+      console.log('Using traditional proxy:', proxyUrl)
+      
+      const customFetch = (url: string | URL | Request, init?: RequestInit) => {
+        let agent
+        if (proxyUrl.startsWith('socks://') || proxyUrl.startsWith('socks4://') || proxyUrl.startsWith('socks5://')) {
+          agent = new SocksProxyAgent(proxyUrl)
+        } else {
+          agent = new HttpsProxyAgent(proxyUrl)
+        }
 
-    // Create custom fetch with proxy support
-    const customFetch = proxyUrl ? (url: string | URL | Request, init?: RequestInit) => {
-      let agent
-      if (proxyUrl.startsWith('socks://') || proxyUrl.startsWith('socks4://') || proxyUrl.startsWith('socks5://')) {
-        agent = new SocksProxyAgent(proxyUrl)
-      } else {
-        agent = new HttpsProxyAgent(proxyUrl)
+        return fetch(url, {
+          ...init,
+          // @ts-expect-error - Node.js specific agent property
+          agent
+        })
       }
 
-      return fetch(url, {
-        ...init,
-        // @ts-expect-error - Node.js specific agent property
-        agent
+      googleAI = createGoogleGenerativeAI({
+        apiKey,
+        fetch: customFetch
       })
-    } : undefined
-
-
-    const googleAI = createGoogleGenerativeAI({
-      apiKey,
-      ...(customFetch && { fetch: customFetch })
-    })
+    } else {
+      // Option 3: Direct connection (no proxy)
+      console.log('Using direct connection (no proxy)')
+      googleAI = createGoogleGenerativeAI({
+        apiKey
+      })
+    }
     const model = googleAI(modelName)
 
     // Convert UI messages to model messages format
@@ -95,7 +122,7 @@ export async function POST(req: Request) {
     })
 
     // Return streaming response
-    return result.toTextStreamResponse()
+    return result.toUIMessageStreamResponse()
   } catch (error: unknown) {
     console.error('Chat API error:', error)
 
