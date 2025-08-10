@@ -34,36 +34,55 @@ pnpm test:ci       # Run tests in CI mode
 ## Architecture
 
 ### Current State
-The application is currently in initial setup phase with:
-- Basic chatbot UI implemented in `src/app/page.tsx` as a client component
-- Placeholder AI responses (AI integration not yet implemented)
-- Message state management using React useState
+The application now has full AI integration with:
+- Complete chatbot UI implemented in `src/app/page.tsx` using AI SDK's useChat hook
+- Google Gemini AI integration via API routes
+- Real-time streaming responses from Gemini 2.5 Flash
+- System prompt restricting conversations to travel-related topics
+- Error handling and loading states
 - Responsive design with dark mode support
 
 ### Key Files
-- `src/app/page.tsx`: Main chatbot interface with message handling
+- `src/app/page.tsx`: Main chatbot interface using AI SDK's useChat hook
+- `src/app/api/chat/route.ts`: API route handling Gemini AI requests
 - `src/app/layout.tsx`: Root layout with Geist fonts
 - `PRPs/1-setup.md`: Original project requirements document (Chinese)
+- `PRPs/2-connect-gemini.md`: Gemini integration requirements
 
 ### Message Flow
-The chatbot uses a simple message array structure:
-```typescript
-Array<{ role: 'user' | 'assistant'; content: string }>
-```
+1. User input is managed by AI SDK's useChat hook
+2. Messages are sent to `/api/chat` endpoint via POST request
+3. API route validates environment variables and initializes Gemini model
+4. System prompt ensures responses stay travel-focused
+5. Gemini generates streaming response with travel assistance
+6. Frontend receives and displays real-time streaming text
+
+### API Integration
+- **Endpoint**: `POST /api/chat`
+- **Model**: Google Gemini 2.5 Flash (configurable)
+- **Features**: Streaming responses, system prompts, error handling
+- **Authentication**: API key via environment variables
 
 ## Environment Setup
 
 Create `.env.local` with:
 ```bash
-GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
+# Required: Get from https://aistudio.google.com/app/apikey  
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Optional: Defaults to gemini-2.5-flash
+GEMINI_MODEL_NAME=gemini-2.5-flash
 ```
+
+Available models: gemini-2.5-flash, gemini-2.5-pro, gemini-1.5-flash, gemini-1.5-pro
 
 ## Next Steps (Based on PRPs)
 
-1. Implement actual AI integration with Google Gemini
-2. Add travel-specific functionality (hotel booking, flight queries)
-3. Evaluate need for additional frameworks like LangChain/LangGraph
-4. Implement comprehensive testing suite following TDD approach
+1. ✅ ~~Implement AI integration with Google Gemini~~
+2. ✅ ~~Add system prompts to restrict conversation scope~~  
+3. Add travel-specific functionality (hotel booking, flight queries)
+4. Evaluate need for additional frameworks like LangChain/LangGraph
+5. Implement comprehensive testing suite following TDD approach
 
 ## Import Aliases
 

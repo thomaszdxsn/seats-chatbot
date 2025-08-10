@@ -49,9 +49,18 @@ pnpm dev
 创建 `.env.local` 文件并配置必要的环境变量：
 
 ```bash
-# Google AI API Key
-GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
+# Google AI API Key (获取地址: https://aistudio.google.com/app/apikey)
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Gemini Model Name (可选，默认使用 gemini-2.5-flash)
+GEMINI_MODEL_NAME=gemini-2.5-flash
 ```
+
+可用的模型：
+- `gemini-2.5-flash` (默认，速度快)
+- `gemini-2.5-pro` (高级功能)
+- `gemini-1.5-flash` 
+- `gemini-1.5-pro`
 
 ## 项目结构
 
@@ -70,11 +79,12 @@ seats-chatbot/
 ## 开发计划
 
 - [x] 项目初始化和基础 UI
-- [ ] 集成 Gemini AI
+- [x] 集成 Gemini AI
+- [x] 实现 System Prompt 限制对话内容
+- [x] 完善测试覆盖
 - [ ] 实现旅行相关功能
 - [ ] 添加酒店预订功能
 - [ ] 添加航班查询功能
-- [ ] 完善测试覆盖
 
 ## 部署
 
