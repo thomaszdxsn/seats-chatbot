@@ -52,14 +52,14 @@ The application has full AI integration with:
 - System prompt restricting conversations to travel-related topics only
 - Error handling, loading states, and form validation
 - Responsive design with dark mode support
-- Comprehensive test coverage (36/36 tests passing)
+- Comprehensive test coverage (37/37 tests passing)
 
 ### Key Files
 - `src/app/page.tsx`: Main chatbot interface using AI SDK 5.0's `useChat` with `DefaultChatTransport`
-- `src/app/api/chat/route.ts`: API route handling Gemini AI requests with `streamText`
+- `src/app/api/chat/route.ts`: API route handling Gemini AI requests with `streamText` and multilingual support
 - `src/app/layout.tsx`: Root layout with Geist fonts and metadata
 - `src/app/page.test.tsx`: Comprehensive frontend tests with AI SDK mocking
-- `src/app/api/chat/route.test.ts`: API endpoint tests with proper mock strategies
+- `src/app/api/chat/route.test.ts`: API endpoint tests with proper mock strategies and multilingual testing
 - `jest.setup.js`: Test environment setup with necessary polyfills (including `TransformStream`)
 
 ### Message Flow (AI SDK 5.0)
@@ -140,6 +140,25 @@ export default {
 
 The application automatically detects the appropriate proxy configuration and logs the chosen method for debugging during development.
 
+## Multilingual Support
+
+The application includes comprehensive multilingual support with intelligent language detection:
+
+### Language Detection & Response
+- **Automatic Language Matching**: AI automatically responds in the same language as the user's input
+- **Supported Languages**: Chinese (中文), English, and other languages
+- **Native Fluency**: Maintains natural, native-level fluency in the chosen language
+
+### Language-Specific Features
+- **Redirect Messages**: Contextually appropriate redirect messages for non-travel topics:
+  - English: "I'm a travel assistant and can only help with travel-related questions. How can I assist you with your travel plans today?"
+  - Chinese: "我是旅行助手，只能帮助解答旅行相关的问题。请问今天我可以如何协助您的旅行计划呢？"
+
+### Implementation Details
+- Language detection is handled through the system prompt in `src/app/api/chat/route.ts`
+- No additional libraries or language detection APIs required
+- Leverages Google Gemini's built-in multilingual capabilities
+
 ## Testing Architecture
 
 ### Test Environment
@@ -189,8 +208,8 @@ TypeScript is configured with `@/*` alias pointing to `./src/*` directory.
 ✅ **Completed**:
 - Full AI SDK 5.0 integration with transport architecture
 - Google Gemini AI streaming responses  
-- System prompt implementation for travel focus
-- Comprehensive test coverage (36/36 tests passing)
+- System prompt implementation for travel focus with multilingual support
+- Comprehensive test coverage (37/37 tests passing)
 - TypeScript and ESLint compliance
 - Responsive UI with dark mode support
 

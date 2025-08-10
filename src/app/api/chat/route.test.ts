@@ -323,6 +323,42 @@ describe('/api/chat', () => {
     Object.defineProperty(process.env, 'NODE_ENV', { value: undefined, writable: true })
   })
 
+  it('includes multilingual support in system prompt', async () => {
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'test-api-key'
+
+    const mockStreamTextImplementation = jest.fn()
+    mockStreamText.mockImplementation(() => ({
+      toUIMessageStreamResponse: jest.fn().mockReturnValue(new Response('test response')),
+    }))
+
+    const request = new Request('http://localhost:3000/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: '你好，我想预订酒店' }],
+      }),
+    })
+
+    await POST(request)
+
+    // Verify that streamText was called with system prompt containing language instructions
+    expect(mockStreamText).toHaveBeenCalledWith(expect.objectContaining({
+      system: expect.stringContaining('ALWAYS respond in the same language as the user\'s message'),
+      messages: expect.arrayContaining([
+        expect.objectContaining({
+          role: 'user',
+          content: '你好，我想预订酒店'
+        })
+      ])
+    }))
+
+    expect(mockStreamText).toHaveBeenCalledWith(expect.objectContaining({
+      system: expect.stringContaining('Chinese: "我是旅行助手，只能帮助解答旅行相关的问题')
+    }))
+  })
+
   it('does not use proxy in production environment', async () => {
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'test-api-key'
     Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true })
