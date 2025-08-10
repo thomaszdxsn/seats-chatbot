@@ -20,7 +20,7 @@ export default function Home() {
       // TODO: Implement AI chat functionality
       const assistantMessage = { 
         role: 'assistant' as const, 
-        content: '您好！我是您的旅行助手。目前 AI 功能还在开发中，敬请期待！' 
+        content: 'Hello! I\'m your travel assistant. AI functionality is currently under development. Stay tuned!' 
       };
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
@@ -38,14 +38,14 @@ export default function Home() {
             Travel Chatbot
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            您的智能旅行助手 - 酒店预订、航班查询一站式服务
+            Your intelligent travel assistant - One-stop service for hotel bookings and flight inquiries
           </p>
         </header>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg h-96 mb-4 overflow-y-auto p-4">
           {messages.length === 0 ? (
             <div className="text-center text-gray-500 dark:text-gray-400 mt-20">
-              开始对话，让我帮助您规划完美的旅程！
+              Start chatting and let me help you plan the perfect trip!
             </div>
           ) : (
             <div className="space-y-4">
@@ -85,7 +85,7 @@ export default function Home() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="请输入您的旅行问题..."
+            placeholder="Enter your travel questions..."
             className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
             disabled={isLoading}
           />
@@ -94,7 +94,7 @@ export default function Home() {
             disabled={isLoading || !input.trim()}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            发送
+            Send
           </button>
         </form>
       </div>
