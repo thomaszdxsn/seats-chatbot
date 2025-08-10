@@ -1,6 +1,7 @@
 import { screen, waitFor, render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Home from './page'
+import '@testing-library/jest-dom'
 
 describe('Home Page', () => {
   it('renders the main heading', () => {
@@ -109,17 +110,12 @@ describe('Home Page', () => {
     // Type a message and submit
     await user.type(input, 'Test')
     
-    // Mock a slow response by clicking but not waiting
-    const clickPromise = user.click(sendButton)
+    // Submit the form
+    await user.click(sendButton)
     
-    // Check if loading dots appear briefly
-    const loadingDots = screen.queryAllByText('', { selector: '.animate-bounce' })
-    
-    // Wait for the action to complete
-    await clickPromise
-    
-    // At minimum, we should have the user message and AI response
+    // Verify that the message was processed
     expect(screen.getByText('Test')).toBeInTheDocument()
+    expect(screen.getByText(/hello! i'm your travel assistant/i)).toBeInTheDocument()
   })
 
   it('disables input and button during loading', async () => {
