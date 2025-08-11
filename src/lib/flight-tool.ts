@@ -1,12 +1,13 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { searchFlights, type FlightResult } from './flight-api';
+import { getBestIataMatch, resolveToIata, formatMatches } from './iata-resolver';
 
 export const flightSearchTool = tool({
   description: 'Search for flights between two airports on specific dates',
   inputSchema: z.object({
-    departureId: z.string().describe('Departure airport code (e.g., LAX, JFK, CDG)'),
-    arrivalId: z.string().describe('Arrival airport code (e.g., LAX, JFK, CDG)'),
+    departureId: z.string().describe('Departure airport - can be IATA code (e.g., LAX, PVG, NRT) or city name (e.g., Los Angeles, Shanghai, Tokyo)'),
+    arrivalId: z.string().describe('Arrival airport - can be IATA code (e.g., LAX, PVG, NRT) or city name (e.g., Los Angeles, Shanghai, Tokyo)'),
     outboundDate: z.string().describe('Departure date in YYYY-MM-DD format'),
     returnDate: z.string().optional().describe('Return date in YYYY-MM-DD format (for round-trip)'),
     type: z.number().int().min(1).max(3).optional().default(1).describe('Trip type: 1=Round Trip, 2=One Way, 3=Multi City'),
@@ -23,6 +24,40 @@ export const flightSearchTool = tool({
     const currentDate = new Date().toISOString().split('T')[0];
     console.log("Executing flight search tool with params:", params);
     console.log("Current date:", currentDate);
+
+    // Resolve departure and arrival to IATA codes
+    const departureIata = getBestIataMatch(params.departureId);
+    const arrivalIata = getBestIataMatch(params.arrivalId);
+
+    console.log(`Resolved departure: "${params.departureId}" -> ${departureIata}`);
+    console.log(`Resolved arrival: "${params.arrivalId}" -> ${arrivalIata}`);
+
+    // Check if we could resolve both airports
+    if (!departureIata || !arrivalIata) {
+      let errorMessage = 'Could not resolve airports:';
+      
+      if (!departureIata) {
+        const departureMatches = resolveToIata(params.departureId);
+        errorMessage += `\n\nDeparture "${params.departureId}" - No good matches found.`;
+        if (departureMatches.length > 0) {
+          errorMessage += ` Did you mean one of these?\n${formatMatches(departureMatches)}`;
+        }
+      }
+      
+      if (!arrivalIata) {
+        const arrivalMatches = resolveToIata(params.arrivalId);
+        errorMessage += `\n\nArrival "${params.arrivalId}" - No good matches found.`;
+        if (arrivalMatches.length > 0) {
+          errorMessage += ` Did you mean one of these?\n${formatMatches(arrivalMatches)}`;
+        }
+      }
+      
+      return {
+        success: false,
+        error: errorMessage,
+        summary: `Failed to resolve airport codes for departure: "${params.departureId}" and arrival: "${params.arrivalId}"`
+      };
+    }
 
     // Fix language and country codes for SerpAPI compatibility
     const languageMapping: Record<string, string> = {
@@ -61,6 +96,8 @@ export const flightSearchTool = tool({
 
     const fixedParams = {
       ...params,
+      departureId: departureIata,
+      arrivalId: arrivalIata,
       type: tripType,
       language: languageMapping[params.language?.toLowerCase() || 'en'] || params.language || 'en',
       country: countryMapping[params.language?.toLowerCase() || 'en'] || params.country || 'us',
@@ -74,7 +111,7 @@ export const flightSearchTool = tool({
         return {
           success: true,
           flights: [],
-          summary: `No flights found for ${fixedParams.departureId} to ${fixedParams.arrivalId} on ${fixedParams.outboundDate}${fixedParams.returnDate ? ` (returning ${fixedParams.returnDate})` : ''}`
+          summary: `No flights found from ${params.departureId} (${departureIata}) to ${params.arrivalId} (${arrivalIata}) on ${fixedParams.outboundDate}${fixedParams.returnDate ? ` (returning ${fixedParams.returnDate})` : ''}`
         };
       }
 
@@ -82,7 +119,7 @@ export const flightSearchTool = tool({
         flight.price < min.price ? flight : min
       );
 
-      const summary = `Found ${flights.length} flight options from ${fixedParams.departureId} to ${fixedParams.arrivalId}. ` +
+      const summary = `Found ${flights.length} flight options from ${params.departureId} (${departureIata}) to ${params.arrivalId} (${arrivalIata}). ` +
         `Cheapest option: ${cheapestFlight.price} ${fixedParams.currency || 'USD'} ` +
         `(${cheapestFlight.flights.length > 0 ? cheapestFlight.flights[0].airline : 'Unknown airline'})`;
 

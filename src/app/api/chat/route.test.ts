@@ -338,7 +338,6 @@ describe('/api/chat', () => {
   it('includes multilingual support in system prompt', async () => {
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'test-api-key'
 
-    const mockStreamTextImplementation = jest.fn()
     mockStreamText.mockImplementation(() => ({
       toUIMessageStreamResponse: jest.fn().mockReturnValue(new Response('test response')),
     }))

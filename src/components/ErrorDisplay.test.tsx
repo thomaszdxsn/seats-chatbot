@@ -70,7 +70,7 @@ describe('ErrorDisplay Component', () => {
     
     // The outermost container has the error styling classes
     const container = screen.getByText('Connection Error:').closest('.bg-red-100');
-    expect(container).toHaveClass('bg-red-100', 'border-red-400');
+    expect(container).toHaveClass('bg-red-100 border-red-400');
     expect(container).toHaveClass('dark:bg-red-900/20');
   });
 
@@ -78,7 +78,7 @@ describe('ErrorDisplay Component', () => {
     render(<ErrorDisplay error={mockError} />);
     
     const retryButton = screen.getByRole('button', { name: 'Retry' });
-    expect(retryButton).toHaveClass('bg-red-500', 'hover:bg-red-600', 'text-white');
+    expect(retryButton).toHaveClass('bg-red-500 hover:bg-red-600 text-white');
   });
 
   it('handles error with empty message', () => {
@@ -96,7 +96,7 @@ describe('ErrorDisplay Component', () => {
     // Check that error message and retry button are in the same row
     const errorRow = screen.getByText('Connection Error:').closest('.flex');
     expect(errorRow).toBeInTheDocument();
-    expect(errorRow).toHaveClass('items-center', 'justify-between');
+    expect(errorRow).toHaveClass('items-center justify-between');
   });
 
   it('shows help text in separate paragraph', () => {
@@ -104,6 +104,6 @@ describe('ErrorDisplay Component', () => {
     
     const helpText = screen.getByText(/Please check your network connection/);
     expect(helpText.tagName).toBe('P');
-    expect(helpText).toHaveClass('text-sm', 'mt-2', 'opacity-75');
+    expect(helpText).toHaveClass('text-sm mt-2 opacity-75');
   });
 });

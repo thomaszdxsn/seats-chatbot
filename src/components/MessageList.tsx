@@ -40,6 +40,28 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
     return <EmptyState />;
   }
 
+  // Check if the last assistant message has active tool calls
+  const hasActiveToolCalls = () => {
+    if (messages.length === 0) return false;
+    
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage.role !== 'assistant') return false;
+    
+    // Check if any parts are tool calls that are not completed
+    return lastMessage.parts?.some(part => {
+      if (part.type === 'dynamic-tool') {
+        return 'state' in part && part.state !== 'output-available';
+      }
+      if (part.type.startsWith('tool-')) {
+        return 'state' in part && part.state !== 'output-available';
+      }
+      return false;
+    }) || false;
+  };
+
+  // Only show global loading if we're loading but don't have active tool calls
+  const showGlobalLoading = isLoading && !hasActiveToolCalls();
+
   return (
     <div className="space-y-4">
       {messages.map((message) => (
@@ -50,7 +72,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
           parts={message.parts}
         />
       ))}
-      {isLoading && <LoadingIndicator />}
+      {showGlobalLoading && <LoadingIndicator />}
     </div>
   );
 }

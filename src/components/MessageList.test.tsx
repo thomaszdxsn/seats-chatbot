@@ -1,6 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { MessageList } from './MessageList';
-import type { UIMessage } from 'ai';
+import type { UIMessage, UIMessagePart } from 'ai';
+
+// Test type to avoid using 'any' in tests
+type TestToolPart = UIMessagePart<Record<string, unknown>, Record<string, unknown>>;
 
 describe('MessageList Component', () => {
   const mockMessages: UIMessage[] = [
@@ -76,5 +79,99 @@ describe('MessageList Component', () => {
     
     const messagesContainer = screen.getByText('Hello, I need help with my trip').closest('.space-y-4');
     expect(messagesContainer).toBeInTheDocument();
+  });
+
+  it('does not show global loading when assistant message has active tool calls', () => {
+    const messagesWithToolCall: UIMessage[] = [
+      ...mockMessages,
+      {
+        id: '3',
+        role: 'assistant',
+        parts: [
+          { type: 'dynamic-tool', toolName: 'flightSearch', toolCallId: 'call-123', state: 'call' } as TestToolPart
+        ]
+      }
+    ];
+    
+    render(<MessageList messages={messagesWithToolCall} isLoading={true} />);
+    
+    // Should not show global loading indicator
+    expect(screen.queryByText('AI is thinking...')).not.toBeInTheDocument();
+    // Should show tool-specific loading within the message
+    expect(screen.getByText('Searching for flights...')).toBeInTheDocument();
+  });
+
+  it('shows global loading when isLoading is true and no active tool calls', () => {
+    render(<MessageList messages={mockMessages} isLoading={true} />);
+    
+    expect(screen.getByText('AI is thinking...')).toBeInTheDocument();
+  });
+
+  it('handles assistant message with completed tool calls', () => {
+    const messagesWithCompletedTool: UIMessage[] = [
+      ...mockMessages,
+      {
+        id: '3',
+        role: 'assistant',
+        parts: [
+          { 
+            type: 'dynamic-tool', 
+            toolName: 'flightSearch', 
+            toolCallId: 'call-456', 
+            state: 'output-available',
+            output: { flights: [], summary: 'No flights found' }
+          } as TestToolPart
+        ]
+      }
+    ];
+    
+    render(<MessageList messages={messagesWithCompletedTool} isLoading={true} />);
+    
+    // Should show global loading since tool is completed
+    expect(screen.getByText('AI is thinking...')).toBeInTheDocument();
+  });
+
+  it('handles static tool types in active tool call detection', () => {
+    const messagesWithStaticTool: UIMessage[] = [
+      ...mockMessages,
+      {
+        id: '3',
+        role: 'assistant',
+        parts: [
+          { type: 'tool-flightSearch', toolCallId: 'call-static', state: 'call' } as TestToolPart
+        ]
+      }
+    ];
+    
+    render(<MessageList messages={messagesWithStaticTool} isLoading={true} />);
+    
+    // Should not show global loading
+    expect(screen.queryByText('AI is thinking...')).not.toBeInTheDocument();
+    // Should show tool-specific loading
+    expect(screen.getByText('Searching for flights...')).toBeInTheDocument();
+  });
+
+  it('handles user message as last message when isLoading', () => {
+    const messagesEndingWithUser: UIMessage[] = [
+      ...mockMessages,
+      {
+        id: '3',
+        role: 'user',
+        parts: [{ type: 'text', text: 'Find me flights to Paris' }]
+      }
+    ];
+    
+    render(<MessageList messages={messagesEndingWithUser} isLoading={true} />);
+    
+    // Should show global loading since last message is user message
+    expect(screen.getByText('AI is thinking...')).toBeInTheDocument();
+  });
+
+  it('handles empty messages array when checking for active tools', () => {
+    render(<MessageList messages={[]} isLoading={true} />);
+    
+    // Should show empty state, not loading indicator
+    expect(screen.getByText('Start chatting and let me help you plan the perfect trip!')).toBeInTheDocument();
+    expect(screen.queryByText('AI is thinking...')).not.toBeInTheDocument();
   });
 });

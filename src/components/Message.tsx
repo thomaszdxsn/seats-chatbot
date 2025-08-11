@@ -152,6 +152,37 @@ export function Message({ role, parts }: MessageProps) {
     return false;
   }) || [];
 
+  // Extract active tool parts (being called but not yet completed)
+  const activeToolParts = parts?.filter(part => {
+    if (part.type === 'dynamic-tool') {
+      return 'state' in part && part.state !== 'output-available';
+    }
+    if (part.type.startsWith('tool-')) {
+      return 'state' in part && part.state !== 'output-available';
+    }
+    return false;
+  }) || [];
+
+  // Determine what tools are being called
+  const getToolLoadingMessage = () => {
+    if (activeToolParts.length === 0) return null;
+    
+    for (const part of activeToolParts) {
+      if (part.type === 'dynamic-tool' && 'toolName' in part) {
+        if (part.toolName === 'flightSearch') {
+          return 'Searching for flights...';
+        }
+      }
+      if (part.type === 'tool-flightSearch') {
+        return 'Searching for flights...';
+      }
+    }
+    
+    return 'Processing request...';
+  };
+
+  const toolLoadingMessage = getToolLoadingMessage();
+
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div
@@ -266,9 +297,22 @@ export function Message({ role, parts }: MessageProps) {
               return null;
             })}
             
-            {/* Show "No content" only if there's no text and no tool results */}
+            {/* Show tool loading message or "No content" only if there's no text and no tool results */}
             {!messageContent && toolParts.length === 0 && (
-              <span className="text-gray-500 dark:text-gray-400">No content</span>
+              <div className="flex items-center space-x-2">
+                {toolLoadingMessage ? (
+                  <>
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                    <span className="text-blue-600 dark:text-blue-400">{toolLoadingMessage}</span>
+                  </>
+                ) : (
+                  <span className="text-gray-500 dark:text-gray-400">No content</span>
+                )}
+              </div>
             )}
           </div>
         )}

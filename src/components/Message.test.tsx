@@ -18,7 +18,7 @@ describe('Message Component', () => {
     
     // Check if user message has correct styling
     const messageElement = screen.getByText('Hello, this is a test message').parentElement;
-    expect(messageElement).toHaveClass('bg-blue-500', 'text-white');
+    expect(messageElement).toHaveClass('bg-blue-500 text-white');
   });
 
   it('renders assistant message with markdown support', () => {
@@ -119,5 +119,114 @@ describe('Message Component', () => {
 
     const containerDiv = screen.getByTestId('markdown').parentElement?.parentElement?.parentElement?.parentElement;
     expect(containerDiv).toHaveClass('justify-start');
+  });
+
+  it('shows flight search loading state when tool is being called', () => {
+    const toolParts: UIMessagePart<UIDataTypes, UITools>[] = [
+      { type: 'dynamic-tool', toolName: 'flightSearch', toolCallId: 'call-123', state: 'call' } as UIMessagePart<UIDataTypes, UITools>
+    ];
+    
+    render(
+      <Message 
+        id="test-9" 
+        role="assistant" 
+        parts={toolParts} 
+      />
+    );
+
+    expect(screen.getByText('Searching for flights...')).toBeInTheDocument();
+    expect(screen.queryByText('No content')).not.toBeInTheDocument();
+  });
+
+  it('shows generic loading state for unknown tool calls', () => {
+    const toolParts: UIMessagePart<UIDataTypes, UITools>[] = [
+      { type: 'dynamic-tool', toolName: 'unknownTool', toolCallId: 'call-456', state: 'call' } as UIMessagePart<UIDataTypes, UITools>
+    ];
+    
+    render(
+      <Message 
+        id="test-10" 
+        role="assistant" 
+        parts={toolParts} 
+      />
+    );
+
+    expect(screen.getByText('Processing request...')).toBeInTheDocument();
+    expect(screen.queryByText('No content')).not.toBeInTheDocument();
+  });
+
+  it('shows flight results when tool output is available', () => {
+    const mockFlightData = [{
+      departure_airport: { id: 'PVG', name: 'Shanghai Pudong' },
+      arrival_airport: { id: 'NRT', name: 'Tokyo Narita' },
+      price: 1200,
+      type: 'Round trip',
+      flights: [{
+        departure_airport: { id: 'PVG', name: 'Shanghai Pudong', time: '10:00' },
+        arrival_airport: { id: 'NRT', name: 'Tokyo Narita', time: '14:00' },
+        duration: 240,
+        airline: 'ANA',
+        airline_logo: 'https://example.com/ana-logo.png',
+        flight_number: 'NH920'
+      }]
+    }];
+
+    const toolParts: UIMessagePart<UIDataTypes, UITools>[] = [
+      { 
+        type: 'dynamic-tool', 
+        toolName: 'flightSearch', 
+        toolCallId: 'call-789', 
+        state: 'output-available',
+        output: { flights: mockFlightData, summary: 'Found 1 flight' }
+      } as UIMessagePart<UIDataTypes, UITools>
+    ];
+    
+    render(
+      <Message 
+        id="test-11" 
+        role="assistant" 
+        parts={toolParts} 
+      />
+    );
+
+    expect(screen.getByText('✈️ Flight Search Results')).toBeInTheDocument();
+    expect(screen.getByText('Shanghai Pudong → Tokyo Narita')).toBeInTheDocument();
+    expect(screen.getByText('¥1200')).toBeInTheDocument();
+  });
+
+  it('handles tool parts with static tool type', () => {
+    const toolParts: UIMessagePart<UIDataTypes, UITools>[] = [
+      { type: 'tool-flightSearch', toolCallId: 'call-static', state: 'call' } as UIMessagePart<UIDataTypes, UITools>
+    ];
+    
+    render(
+      <Message 
+        id="test-12" 
+        role="assistant" 
+        parts={toolParts} 
+      />
+    );
+
+    expect(screen.getByText('Searching for flights...')).toBeInTheDocument();
+  });
+
+  it('shows loading animation for active tool calls', () => {
+    const toolParts: UIMessagePart<UIDataTypes, UITools>[] = [
+      { type: 'dynamic-tool', toolName: 'flightSearch', toolCallId: 'call-anim', state: 'call' } as UIMessagePart<UIDataTypes, UITools>
+    ];
+    
+    render(
+      <Message 
+        id="test-13" 
+        role="assistant" 
+        parts={toolParts} 
+      />
+    );
+
+    // Check for animated loading dots
+    const container = screen.getByText('Searching for flights...').parentElement;
+    const dots = container?.querySelectorAll('.w-2.h-2.bg-blue-400.rounded-full.animate-bounce') || [];
+    
+    expect(dots).toHaveLength(3);
   });
 });
