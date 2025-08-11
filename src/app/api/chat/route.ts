@@ -2,7 +2,8 @@ import { streamText } from 'ai';
 import { getProxyConfiguration, createGoogleAIClient } from '@/lib/proxy-config';
 import { convertUIMessagesToModelMessages, type UIMessage } from '@/lib/message-converter';
 import { createErrorResponse, createErrorHttpResponse } from '@/lib/error-handler';
-import { SYSTEM_PROMPT } from '@/lib/system-prompt';
+import { getCurrentSystemPrompt } from '@/lib/system-prompt';
+import { flightSearchTool } from '@/lib/flight-tool';
 
 export async function POST(req: Request) {
   try {
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
 
     // Get proxy configuration
     const proxyConfig = getProxyConfiguration();
-    
+
     // Create Google AI client with appropriate configuration
     const googleAI = createGoogleAIClient(apiKey, proxyConfig);
     const model = googleAI(modelName);
@@ -28,12 +29,15 @@ export async function POST(req: Request) {
     // Convert UI messages to model messages format
     const modelMessages = convertUIMessagesToModelMessages(messages);
 
-    // Create the stream with system prompt
+    // Create the stream with system prompt and tools
     const result = streamText({
       model,
-      system: SYSTEM_PROMPT,
+      system: getCurrentSystemPrompt(),
       messages: modelMessages,
-      temperature: 0.7,
+      temperature: 0.5,
+      tools: {
+        flightSearch: flightSearchTool,
+      },
     });
 
     // Return streaming response

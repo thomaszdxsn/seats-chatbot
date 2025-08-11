@@ -16,13 +16,15 @@
     "@ai-sdk/google": "^2.0.3",
     "@ai-sdk/react": "^2.0.9",
     "ai": "^5.0.9",
+    "google-search-results-nodejs": "^2.1.0",
     "https-proxy-agent": "^7.0.6",
     "next": "15.4.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "socks-proxy-agent": "^8.0.5"
+    "socks-proxy-agent": "^8.0.5",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

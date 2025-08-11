@@ -1,17 +1,9 @@
 'use client';
 
 import { Message } from './Message';
+import type { UIMessage } from 'ai';
 
-interface MessagePart {
-  type: string;
-  text: string;
-}
-
-interface MessageData {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
-  parts?: MessagePart[];
-}
+type MessageData = UIMessage;
 
 interface MessageListProps {
   messages: MessageData[];

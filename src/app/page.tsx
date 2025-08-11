@@ -58,7 +58,7 @@ export default function Home() {
           </p>
         </header>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg h-96 mb-4 overflow-y-auto p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg min-h-96 max-h-[80vh] mb-4 overflow-y-auto p-4">
           <MessageList messages={messages} isLoading={isLoading} />
         </div>
 

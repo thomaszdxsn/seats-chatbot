@@ -7,6 +7,7 @@ jest.mock('@ai-sdk/google', () => ({
 
 jest.mock('ai', () => ({
   streamText: jest.fn(),
+  tool: jest.fn(),
 }))
 
 jest.mock('https-proxy-agent', () => ({
@@ -15,6 +16,14 @@ jest.mock('https-proxy-agent', () => ({
 
 jest.mock('socks-proxy-agent', () => ({
   SocksProxyAgent: jest.fn(),
+}))
+
+jest.mock('../../../lib/flight-tool', () => ({
+  flightSearchTool: {
+    description: 'Mock flight search tool',
+    inputSchema: {},
+    execute: jest.fn(),
+  },
 }))
 
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
@@ -140,7 +149,10 @@ describe('/api/chat', () => {
       model: mockModel,
       system: expect.stringContaining('travel assistant chatbot'),
       messages: testMessages,
-      temperature: 0.7,
+      temperature: 0.5,
+      tools: {
+        flightSearch: expect.any(Object),
+      },
     })
   })
 

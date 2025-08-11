@@ -12,7 +12,7 @@ export function getProxyConfiguration(): ProxyConfiguration {
   const isDevelopment = process.env.NODE_ENV !== 'production';
   
   // Only enable proxy in development environment (not in production/Vercel)
-  const needsProxy = isDevelopment && (process.env.USE_CHINA_PROXY === 'true' || process.env.CHINA_PROXY_URL);
+  const needsProxy = isDevelopment && (process.env.USE_CHINA_PROXY === 'true' || !!process.env.CHINA_PROXY_URL);
   const chinaProxyUrl = process.env.CHINA_PROXY_URL || 'https://api.genai.gd.edu.kg/google';
   
   // Traditional proxy configuration (for VPN/SOCKS/HTTP proxies) - development only

@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { Message } from './Message';
+import type { UIMessagePart, UIDataTypes, UITools } from 'ai';
 
 describe('Message Component', () => {
-  const mockMessageParts = [{ type: 'text', text: 'Hello, this is a test message' }];
+  const mockMessageParts: UIMessagePart<UIDataTypes, UITools>[] = [{ type: 'text', text: 'Hello, this is a test message' }];
 
   it('renders user message correctly', () => {
     render(
@@ -21,7 +22,7 @@ describe('Message Component', () => {
   });
 
   it('renders assistant message with markdown support', () => {
-    const markdownParts = [{ type: 'text', text: '# Hello World\n\nThis is **bold** text.' }];
+    const markdownParts: UIMessagePart<UIDataTypes, UITools>[] = [{ type: 'text', text: '# Hello World\n\nThis is **bold** text.' }];
     
     render(
       <Message 
@@ -78,7 +79,7 @@ describe('Message Component', () => {
   });
 
   it('concatenates multiple text parts', () => {
-    const multiParts = [
+    const multiParts: UIMessagePart<UIDataTypes, UITools>[] = [
       { type: 'text', text: 'First part ' },
       { type: 'text', text: 'Second part' }
     ];
@@ -116,7 +117,7 @@ describe('Message Component', () => {
       />
     );
 
-    const containerDiv = screen.getByTestId('markdown').parentElement?.parentElement?.parentElement;
+    const containerDiv = screen.getByTestId('markdown').parentElement?.parentElement?.parentElement?.parentElement;
     expect(containerDiv).toHaveClass('justify-start');
   });
 });

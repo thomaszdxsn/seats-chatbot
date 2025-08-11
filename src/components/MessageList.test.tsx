@@ -1,16 +1,17 @@
 import { render, screen } from '@testing-library/react';
 import { MessageList } from './MessageList';
+import type { UIMessage } from 'ai';
 
 describe('MessageList Component', () => {
-  const mockMessages = [
+  const mockMessages: UIMessage[] = [
     {
       id: '1',
-      role: 'user' as const,
+      role: 'user',
       parts: [{ type: 'text', text: 'Hello, I need help with my trip' }]
     },
     {
       id: '2', 
-      role: 'assistant' as const,
+      role: 'assistant',
       parts: [{ type: 'text', text: 'I can help you plan your travel!' }]
     }
   ];
