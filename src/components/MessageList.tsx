@@ -8,6 +8,9 @@ type MessageData = UIMessage;
 interface MessageListProps {
   messages: MessageData[];
   isLoading: boolean;
+  onCopy?: (content: string) => void;
+  onEdit?: (messageId: string, content: string) => void;
+  onResend?: (messageId: string, content: string) => void;
 }
 
 function LoadingIndicator() {
@@ -35,7 +38,7 @@ function EmptyState() {
   );
 }
 
-export function MessageList({ messages, isLoading }: MessageListProps) {
+export function MessageList({ messages, isLoading, onCopy, onEdit, onResend }: MessageListProps) {
   if (messages.length === 0) {
     return <EmptyState />;
   }
@@ -70,6 +73,9 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
           id={message.id}
           role={message.role}
           parts={message.parts}
+          onCopy={onCopy}
+          onEdit={onEdit}
+          onResend={onResend}
         />
       ))}
       {showGlobalLoading && <LoadingIndicator />}

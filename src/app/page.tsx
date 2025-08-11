@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { MessageList } from '@/components/MessageList';
@@ -7,7 +8,11 @@ import { ChatInput } from '@/components/ChatInput';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 
 export default function Home() {
-  const { messages, sendMessage, status, error } = useChat({
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState('');
+  const [originalMessages, setOriginalMessages] = useState<typeof messages>([]);
+  
+  const { messages, sendMessage, status, error, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/chat',
       fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -43,7 +48,68 @@ export default function Home() {
   const isLoading = status === 'submitted' || status === 'streaming';
 
   const handleSendMessage = (text: string) => {
+    // If we're editing, replace the message and regenerate from that point
+    if (editingMessageId) {
+      const messageIndex = messages.findIndex(m => m.id === editingMessageId);
+      if (messageIndex !== -1) {
+        // Keep only messages up to (but not including) the edited message
+        const newMessages = messages.slice(0, messageIndex);
+        // Add the edited message
+        const editedMessage = { ...messages[messageIndex] };
+        editedMessage.parts = [{ type: 'text' as const, text }];
+        newMessages.push(editedMessage);
+        
+        // Update messages and send the new message
+        setMessages(newMessages);
+        setEditingMessageId(null);
+        setEditingContent('');
+        setOriginalMessages([]);
+        
+        // Send the message to get AI response
+        setTimeout(() => {
+          sendMessage({ text });
+        }, 100);
+        return;
+      }
+    }
+    
     sendMessage({ text });
+  };
+
+  const handleCopy = (content: string) => {
+    console.log('Copied:', content);
+  };
+
+  const handleEdit = (messageId: string, content: string) => {
+    // Edit should behave like resend - replace the message and delete subsequent ones
+    const messageIndex = messages.findIndex(m => m.id === messageId);
+    if (messageIndex !== -1) {
+      // Save original messages before editing
+      setOriginalMessages(messages);
+      
+      // Keep only messages up to (but not including) the edited message
+      const newMessages = messages.slice(0, messageIndex);
+      setMessages(newMessages);
+      
+      // Set editing state to populate input field
+      setEditingMessageId(messageId);
+      setEditingContent(content);
+    }
+  };
+
+  const handleResend = (messageId: string, content: string) => {
+    // For resend, we do the same as edit but immediately send
+    const messageIndex = messages.findIndex(m => m.id === messageId);
+    if (messageIndex !== -1) {
+      // Keep only messages up to (but not including) the resent message
+      const newMessages = messages.slice(0, messageIndex);
+      setMessages(newMessages);
+      
+      // Send the message again
+      setTimeout(() => {
+        sendMessage({ text: content });
+      }, 100);
+    }
   };
 
   return (
@@ -59,12 +125,32 @@ export default function Home() {
         </header>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg min-h-96 max-h-[70vh] mb-4 overflow-y-auto p-4">
-          <MessageList messages={messages} isLoading={isLoading} />
+          <MessageList 
+            messages={messages} 
+            isLoading={isLoading} 
+            onCopy={handleCopy}
+            onEdit={handleEdit}
+            onResend={handleResend}
+          />
         </div>
 
         {error && <ErrorDisplay error={error} />}
 
-        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+        <ChatInput 
+          onSendMessage={handleSendMessage} 
+          isLoading={isLoading} 
+          editingContent={editingContent}
+          isEditing={!!editingMessageId}
+          onCancelEdit={() => {
+            // Restore original messages when canceling edit
+            if (originalMessages.length > 0) {
+              setMessages(originalMessages);
+              setOriginalMessages([]);
+            }
+            setEditingMessageId(null);
+            setEditingContent('');
+          }}
+        />
       </div>
     </div>
   );

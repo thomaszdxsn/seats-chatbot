@@ -366,4 +366,48 @@ describe('Home Page', () => {
     expect(screen.getByText('Second message')).toBeInTheDocument()
     expect(screen.getByText('Second response')).toBeInTheDocument()
   })
+
+  it('restores original messages when canceling edit', async () => {
+    const user = userEvent.setup();
+    const mockSendMessage = jest.fn();
+    const mockSetMessages = jest.fn();
+
+    const originalMessages = [
+      { id: '1', role: 'user', parts: [{ type: 'text', text: 'First message' }] },
+      { id: '2', role: 'assistant', parts: [{ type: 'text', text: 'First response' }] },
+      { id: '3', role: 'user', parts: [{ type: 'text', text: 'Second message' }] },
+      { id: '4', role: 'assistant', parts: [{ type: 'text', text: 'Second response' }] }
+    ];
+
+    mockUseChat.mockReturnValue({
+      ...defaultMockReturn,
+      messages: originalMessages,
+      sendMessage: mockSendMessage,
+      setMessages: mockSetMessages
+    });
+
+    render(<Home />);
+
+    // Find the second user message and click edit
+    const editButtons = screen.getAllByTitle('Edit message');
+    await user.click(editButtons[1]); // Second user message (index 1)
+
+    // Should show editing UI
+    expect(screen.getByText(/Editing message/)).toBeInTheDocument();
+
+    // Should have truncated messages
+    expect(mockSetMessages).toHaveBeenCalledWith([
+      { id: '1', role: 'user', parts: [{ type: 'text', text: 'First message' }] },
+      { id: '2', role: 'assistant', parts: [{ type: 'text', text: 'First response' }] }
+    ]);
+
+    // Cancel editing
+    await user.click(screen.getByText('Cancel'));
+
+    // Should restore original messages
+    expect(mockSetMessages).toHaveBeenCalledWith(originalMessages);
+
+    // Should clear editing state
+    expect(screen.queryByText(/Editing message/)).not.toBeInTheDocument();
+  })
 })

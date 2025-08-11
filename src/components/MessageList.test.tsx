@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { MessageList } from './MessageList';
 import type { UIMessage, UIMessagePart } from 'ai';
 
-// Test type to avoid using 'any' in tests
-type TestToolPart = UIMessagePart<Record<string, unknown>, Record<string, unknown>>;
+// Test type to avoid using 'any' in tests  
+type TestToolPart = UIMessagePart<Record<string, never>, Record<string, never>>;
 
 describe('MessageList Component', () => {
   const mockMessages: UIMessage[] = [
@@ -88,7 +88,7 @@ describe('MessageList Component', () => {
         id: '3',
         role: 'assistant',
         parts: [
-          { type: 'dynamic-tool', toolName: 'flightSearch', toolCallId: 'call-123', state: 'call' } as TestToolPart
+          { type: 'dynamic-tool', toolName: 'flightSearch', toolCallId: 'call-123', state: 'input-streaming', input: {}, output: undefined, errorText: undefined } as TestToolPart
         ]
       }
     ];
@@ -138,7 +138,7 @@ describe('MessageList Component', () => {
         id: '3',
         role: 'assistant',
         parts: [
-          { type: 'tool-flightSearch', toolCallId: 'call-static', state: 'call' } as TestToolPart
+          { type: 'tool-flightSearch', toolCallId: 'call-static', state: 'input-streaming', input: {}, output: undefined, errorText: undefined } as TestToolPart
         ]
       }
     ];

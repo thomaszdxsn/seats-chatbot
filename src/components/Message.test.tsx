@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Message } from './Message';
 import type { UIMessagePart, UIDataTypes, UITools } from 'ai';
 
@@ -104,7 +105,7 @@ describe('Message Component', () => {
       />
     );
 
-    const containerDiv = screen.getByText('Hello, this is a test message').parentElement?.parentElement;
+    const containerDiv = screen.getByText('Hello, this is a test message').closest('.flex');
     expect(containerDiv).toHaveClass('justify-end');
   });
 
@@ -117,13 +118,13 @@ describe('Message Component', () => {
       />
     );
 
-    const containerDiv = screen.getByTestId('markdown').parentElement?.parentElement?.parentElement?.parentElement;
+    const containerDiv = screen.getByTestId('markdown').closest('.flex');
     expect(containerDiv).toHaveClass('justify-start');
   });
 
   it('shows flight search loading state when tool is being called', () => {
     const toolParts: UIMessagePart<UIDataTypes, UITools>[] = [
-      { type: 'dynamic-tool', toolName: 'flightSearch', toolCallId: 'call-123', state: 'call' } as UIMessagePart<UIDataTypes, UITools>
+      { type: 'dynamic-tool', toolName: 'flightSearch', toolCallId: 'call-123', state: 'input-streaming', input: {}, output: undefined, errorText: undefined } as UIMessagePart<UIDataTypes, UITools>
     ];
     
     render(
@@ -140,7 +141,7 @@ describe('Message Component', () => {
 
   it('shows generic loading state for unknown tool calls', () => {
     const toolParts: UIMessagePart<UIDataTypes, UITools>[] = [
-      { type: 'dynamic-tool', toolName: 'unknownTool', toolCallId: 'call-456', state: 'call' } as UIMessagePart<UIDataTypes, UITools>
+      { type: 'dynamic-tool', toolName: 'unknownTool', toolCallId: 'call-456', state: 'input-streaming', input: {}, output: undefined, errorText: undefined } as UIMessagePart<UIDataTypes, UITools>
     ];
     
     render(
@@ -196,7 +197,7 @@ describe('Message Component', () => {
 
   it('handles tool parts with static tool type', () => {
     const toolParts: UIMessagePart<UIDataTypes, UITools>[] = [
-      { type: 'tool-flightSearch', toolCallId: 'call-static', state: 'call' } as UIMessagePart<UIDataTypes, UITools>
+      { type: 'tool-flightSearch', toolCallId: 'call-static', state: 'input-streaming', input: {}, output: undefined, errorText: undefined } as UIMessagePart<UIDataTypes, UITools>
     ];
     
     render(
@@ -212,7 +213,7 @@ describe('Message Component', () => {
 
   it('shows loading animation for active tool calls', () => {
     const toolParts: UIMessagePart<UIDataTypes, UITools>[] = [
-      { type: 'dynamic-tool', toolName: 'flightSearch', toolCallId: 'call-anim', state: 'call' } as UIMessagePart<UIDataTypes, UITools>
+      { type: 'dynamic-tool', toolName: 'flightSearch', toolCallId: 'call-anim', state: 'input-streaming', input: {}, output: undefined, errorText: undefined } as UIMessagePart<UIDataTypes, UITools>
     ];
     
     render(
@@ -228,5 +229,89 @@ describe('Message Component', () => {
     const dots = container?.querySelectorAll('.w-2.h-2.bg-blue-400.rounded-full.animate-bounce') || [];
     
     expect(dots).toHaveLength(3);
+  });
+
+  it('shows message actions on hover', () => {
+    render(
+      <Message 
+        id="test-14" 
+        role="user" 
+        parts={mockMessageParts} 
+        onCopy={jest.fn()}
+      />
+    );
+
+    expect(screen.getByTitle('Copy message')).toBeInTheDocument();
+  });
+
+  it('shows edit and resend buttons for user messages', () => {
+    const mockOnEdit = jest.fn();
+    const mockOnResend = jest.fn();
+    
+    render(
+      <Message 
+        id="test-15" 
+        role="user" 
+        parts={mockMessageParts} 
+        onEdit={mockOnEdit}
+        onResend={mockOnResend}
+      />
+    );
+
+    expect(screen.getByTitle('Edit message')).toBeInTheDocument();
+    expect(screen.getByTitle('Resend message')).toBeInTheDocument();
+  });
+
+  it('does not show edit and resend buttons for assistant messages', () => {
+    const mockOnEdit = jest.fn();
+    const mockOnResend = jest.fn();
+    
+    render(
+      <Message 
+        id="test-16" 
+        role="assistant" 
+        parts={mockMessageParts} 
+        onEdit={mockOnEdit}
+        onResend={mockOnResend}
+      />
+    );
+
+    expect(screen.queryByTitle('Edit message')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Resend message')).not.toBeInTheDocument();
+    expect(screen.getByTitle('Copy message')).toBeInTheDocument();
+  });
+
+  it('calls onEdit when edit button is clicked', async () => {
+    const mockOnEdit = jest.fn();
+    const user = userEvent.setup();
+    
+    render(
+      <Message 
+        id="test-17" 
+        role="user" 
+        parts={mockMessageParts} 
+        onEdit={mockOnEdit}
+      />
+    );
+
+    await user.click(screen.getByTitle('Edit message'));
+    expect(mockOnEdit).toHaveBeenCalledWith('test-17', 'Hello, this is a test message');
+  });
+
+  it('calls onResend when resend button is clicked', async () => {
+    const mockOnResend = jest.fn();
+    const user = userEvent.setup();
+    
+    render(
+      <Message 
+        id="test-18" 
+        role="user" 
+        parts={mockMessageParts} 
+        onResend={mockOnResend}
+      />
+    );
+
+    await user.click(screen.getByTitle('Resend message'));
+    expect(mockOnResend).toHaveBeenCalledWith('test-18', 'Hello, this is a test message');
   });
 });

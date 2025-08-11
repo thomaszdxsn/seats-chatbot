@@ -144,4 +144,77 @@ describe('ChatInput Component', () => {
     
     expect(sendButton).not.toBeDisabled();
   });
+
+  it('shows editing state when isEditing is true', () => {
+    render(
+      <ChatInput 
+        onSendMessage={mockOnSendMessage} 
+        isLoading={false}
+        isEditing={true}
+        editingContent="Edit this message"
+      />
+    );
+
+    expect(screen.getByText('✏️ Editing message - submit to update and regenerate response')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Edit this message')).toBeInTheDocument();
+    expect(screen.getByText('Update')).toBeInTheDocument();
+  });
+
+  it('shows cancel button when editing', () => {
+    const mockOnCancelEdit = jest.fn();
+    
+    render(
+      <ChatInput 
+        onSendMessage={mockOnSendMessage} 
+        isLoading={false}
+        isEditing={true}
+        editingContent="Edit this message"
+        onCancelEdit={mockOnCancelEdit}
+      />
+    );
+
+    expect(screen.getByText('Cancel')).toBeInTheDocument();
+  });
+
+  it('calls onCancelEdit when cancel button is clicked', async () => {
+    const mockOnCancelEdit = jest.fn();
+    const user = userEvent.setup();
+    
+    render(
+      <ChatInput 
+        onSendMessage={mockOnSendMessage} 
+        isLoading={false}
+        isEditing={true}
+        editingContent="Edit this message"
+        onCancelEdit={mockOnCancelEdit}
+      />
+    );
+
+    await user.click(screen.getByText('Cancel'));
+    expect(mockOnCancelEdit).toHaveBeenCalled();
+  });
+
+  it('updates input when editingContent changes', () => {
+    const { rerender } = render(
+      <ChatInput 
+        onSendMessage={mockOnSendMessage} 
+        isLoading={false}
+        isEditing={true}
+        editingContent="Original message"
+      />
+    );
+
+    expect(screen.getByDisplayValue('Original message')).toBeInTheDocument();
+
+    rerender(
+      <ChatInput 
+        onSendMessage={mockOnSendMessage} 
+        isLoading={false}
+        isEditing={true}
+        editingContent="Updated message"
+      />
+    );
+
+    expect(screen.getByDisplayValue('Updated message')).toBeInTheDocument();
+  });
 });
