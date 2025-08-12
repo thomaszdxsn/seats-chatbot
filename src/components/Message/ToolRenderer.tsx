@@ -2,7 +2,8 @@ import { FlightResults } from './FlightResults';
 import PointsYeahResults from './PointsYeahResults';
 import PointsYeahHotelResults from './PointsYeahHotelResults';
 import { DateTimeResults } from './DateTimeResults';
-import { LoadingIndicator } from './LoadingIndicator';
+import { ToolCallIndicator } from './ToolCallIndicator';
+import { LoadingIndicator } from './LoadingIndicator'; // Keep for legacy tools
 import { ToolPartWithOutput, type SearchParams } from './types';
 import type { PointsYeahResponse } from '@/lib/pointsyeah/flight-api';
 import type { PointsYeahHotelResponse, HotelSearchInput } from '@/lib/pointsyeah/hotel-api';
@@ -41,22 +42,29 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
           // Show loading state when tool is being executed
           if (part.state === 'call' || part.state === 'executing') {
             return (
-              <div key={`tool-loading-${part.toolCallId || index}`} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
-                <LoadingIndicator message="Searching for reward flights..." />
-              </div>
+              <ToolCallIndicator 
+                key={`tool-loading-${part.toolCallId || index}`}
+                toolName="pointsYeahFlightSearch"
+                isLoading={true}
+              />
             );
           }
           
-          // Show results when output is available
+          // Show results when output is available - with persistent indicator
           if (part.state === 'output-available') {
             const dynamicPart = part as ToolPartWithOutput;
             if (dynamicPart.output?.pointsyeah_data) {
               return (
-                <PointsYeahResults
-                  key={`tool-${dynamicPart.toolCallId || index}`}
-                  data={dynamicPart.output.pointsyeah_data}
-                  searchParams={dynamicPart.output.search_params}
-                />
+                <div key={`tool-${dynamicPart.toolCallId || index}`}>
+                  <ToolCallIndicator 
+                    toolName="pointsYeahFlightSearch"
+                    isCompleted={true}
+                  />
+                  <PointsYeahResults
+                    data={dynamicPart.output.pointsyeah_data}
+                    searchParams={dynamicPart.output.search_params}
+                  />
+                </div>
               );
             }
           }
@@ -68,22 +76,29 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
           // Show loading state when tool is being executed
           if (part.state === 'call' || part.state === 'executing') {
             return (
-              <div key={`tool-loading-${part.toolCallId || index}`} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
-                <LoadingIndicator message="Searching for reward flights..." />
-              </div>
+              <ToolCallIndicator 
+                key={`tool-loading-${part.toolCallId || index}`}
+                toolName="pointsYeahFlightSearch"
+                isLoading={true}
+              />
             );
           }
           
-          // Show results when output is available
+          // Show results when output is available - with persistent indicator
           if (part.state === 'output-available') {
             const toolPart = part as ToolPartWithOutput;
             if (toolPart.output?.pointsyeah_data) {
               return (
-                <PointsYeahResults
-                  key={`tool-${toolPart.toolCallId || index}`}
-                  data={toolPart.output.pointsyeah_data}
-                  searchParams={toolPart.output.search_params}
-                />
+                <div key={`tool-${toolPart.toolCallId || index}`}>
+                  <ToolCallIndicator 
+                    toolName="pointsYeahFlightSearch"
+                    isCompleted={true}
+                  />
+                  <PointsYeahResults
+                    data={toolPart.output.pointsyeah_data}
+                    searchParams={toolPart.output.search_params}
+                  />
+                </div>
               );
             }
           }
@@ -147,22 +162,29 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
           // Show loading state when tool is being executed
           if (part.state === 'call' || part.state === 'executing') {
             return (
-              <div key={`tool-loading-${part.toolCallId || index}`} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
-                <LoadingIndicator message="Searching for reward hotels..." />
-              </div>
+              <ToolCallIndicator 
+                key={`tool-loading-${part.toolCallId || index}`}
+                toolName="pointsYeahHotelSearch"
+                isLoading={true}
+              />
             );
           }
           
-          // Show results when output is available
+          // Show results when output is available - with persistent indicator
           if (part.state === 'output-available') {
             const dynamicPart = part as ToolPartWithOutput;
             if (dynamicPart.output?.pointsyeah_hotel_data) {
               return (
-                <PointsYeahHotelResults
-                  key={`tool-${dynamicPart.toolCallId || index}`}
-                  data={dynamicPart.output.pointsyeah_hotel_data}
-                  searchParams={dynamicPart.output.hotel_search_params}
-                />
+                <div key={`tool-${dynamicPart.toolCallId || index}`}>
+                  <ToolCallIndicator 
+                    toolName="pointsYeahHotelSearch"
+                    isCompleted={true}
+                  />
+                  <PointsYeahHotelResults
+                    data={dynamicPart.output.pointsyeah_hotel_data}
+                    searchParams={dynamicPart.output.hotel_search_params}
+                  />
+                </div>
               );
             }
           }
@@ -174,22 +196,29 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
           // Show loading state when tool is being executed
           if (part.state === 'call' || part.state === 'executing') {
             return (
-              <div key={`tool-loading-${part.toolCallId || index}`} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
-                <LoadingIndicator message="Searching for reward hotels..." />
-              </div>
+              <ToolCallIndicator 
+                key={`tool-loading-${part.toolCallId || index}`}
+                toolName="pointsYeahHotelSearch"
+                isLoading={true}
+              />
             );
           }
           
-          // Show results when output is available
+          // Show results when output is available - with persistent indicator
           if (part.state === 'output-available') {
             const toolPart = part as ToolPartWithOutput;
             if (toolPart.output?.pointsyeah_hotel_data) {
               return (
-                <PointsYeahHotelResults
-                  key={`tool-${toolPart.toolCallId || index}`}
-                  data={toolPart.output.pointsyeah_hotel_data}
-                  searchParams={toolPart.output.hotel_search_params}
-                />
+                <div key={`tool-${toolPart.toolCallId || index}`}>
+                  <ToolCallIndicator 
+                    toolName="pointsYeahHotelSearch"
+                    isCompleted={true}
+                  />
+                  <PointsYeahHotelResults
+                    data={toolPart.output.pointsyeah_hotel_data}
+                    searchParams={toolPart.output.hotel_search_params}
+                  />
+                </div>
               );
             }
           }
@@ -202,27 +231,34 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
           // Show loading state when tool is being executed
           if (part.state === 'call' || part.state === 'executing') {
             return (
-              <div key={`tool-loading-${part.toolCallId || index}`} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
-                <LoadingIndicator message="Calculating datetime..." />
-              </div>
+              <ToolCallIndicator 
+                key={`tool-loading-${part.toolCallId || index}`}
+                toolName="datetimeCalculator"
+                isLoading={true}
+              />
             );
           }
           
-          // Show results when output is available
+          // Show results when output is available - with persistent indicator
           if (part.state === 'output-available') {
             const dynamicPart = part as ToolPartWithOutput;
             if (dynamicPart.output && dynamicPart.output.operation) {
               return (
-                <DateTimeResults
-                  key={`tool-${dynamicPart.toolCallId || index}`}
-                  data={{
-                    success: dynamicPart.output.success || false,
-                    result: dynamicPart.output.result,
-                    error: dynamicPart.output.error,
-                    operation: dynamicPart.output.operation,
-                    timestamp: dynamicPart.output.timestamp || new Date().toISOString()
-                  }}
-                />
+                <div key={`tool-${dynamicPart.toolCallId || index}`}>
+                  <ToolCallIndicator 
+                    toolName="datetimeCalculator"
+                    isCompleted={true}
+                  />
+                  <DateTimeResults
+                    data={{
+                      success: dynamicPart.output.success || false,
+                      result: dynamicPart.output.result,
+                      error: dynamicPart.output.error,
+                      operation: dynamicPart.output.operation,
+                      timestamp: dynamicPart.output.timestamp || new Date().toISOString()
+                    }}
+                  />
+                </div>
               );
             }
           }
@@ -234,27 +270,34 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
           // Show loading state when tool is being executed
           if (part.state === 'call' || part.state === 'executing') {
             return (
-              <div key={`tool-loading-${part.toolCallId || index}`} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
-                <LoadingIndicator message="Calculating datetime..." />
-              </div>
+              <ToolCallIndicator 
+                key={`tool-loading-${part.toolCallId || index}`}
+                toolName="datetimeCalculator"
+                isLoading={true}
+              />
             );
           }
           
-          // Show results when output is available
+          // Show results when output is available - with persistent indicator
           if (part.state === 'output-available') {
             const toolPart = part as ToolPartWithOutput;
             if (toolPart.output && toolPart.output.operation) {
               return (
-                <DateTimeResults
-                  key={`tool-${toolPart.toolCallId || index}`}
-                  data={{
-                    success: toolPart.output.success || false,
-                    result: toolPart.output.result,
-                    error: toolPart.output.error,
-                    operation: toolPart.output.operation,
-                    timestamp: toolPart.output.timestamp || new Date().toISOString()
-                  }}
-                />
+                <div key={`tool-${toolPart.toolCallId || index}`}>
+                  <ToolCallIndicator 
+                    toolName="datetimeCalculator"
+                    isCompleted={true}
+                  />
+                  <DateTimeResults
+                    data={{
+                      success: toolPart.output.success || false,
+                      result: toolPart.output.result,
+                      error: toolPart.output.error,
+                      operation: toolPart.output.operation,
+                      timestamp: toolPart.output.timestamp || new Date().toISOString()
+                    }}
+                  />
+                </div>
               );
             }
           }
