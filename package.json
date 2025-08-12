@@ -20,6 +20,7 @@
     "@ai-sdk/google": "^2.0.3",
     "@ai-sdk/react": "^2.0.9",
     "ai": "^5.0.9",
+    "dayjs": "^1.11.13",
     "google-search-results-nodejs": "^2.1.0",
     "https-proxy-agent": "^7.0.6",
     "next": "15.4.6",

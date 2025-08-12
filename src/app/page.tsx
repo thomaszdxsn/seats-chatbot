@@ -6,6 +6,7 @@ import { DefaultChatTransport } from 'ai';
 import { MessageList } from '@/components/MessageList';
 import { ChatInput } from '@/components/ChatInput';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
+import { useTimezone } from '@/hooks/useTimezone';
 
 export default function Home() {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
@@ -13,13 +14,21 @@ export default function Home() {
   const [originalMessages, setOriginalMessages] = useState<typeof messages>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
+  // Get user's timezone using custom hook
+  const userTimezone = useTimezone();
+  
   const { messages, sendMessage, status, error, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/chat',
       fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
         try {
+          // Add user timezone to request headers
+          const headers = new Headers(init?.headers);
+          headers.set('X-User-Timezone', userTimezone);
+          
           const response = await fetch(input, {
             ...init,
+            headers,
             signal: AbortSignal.timeout(30000), // 30 second timeout
           });
 

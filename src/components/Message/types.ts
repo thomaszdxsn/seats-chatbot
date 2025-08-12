@@ -45,6 +45,14 @@ export interface SearchParams {
   page_size?: number;
 }
 
+export interface DateTimeOutput {
+  success: boolean;
+  result?: string;
+  error?: string;
+  operation: string;
+  timestamp: string;
+}
+
 export type ToolPartWithOutput = {
   toolCallId: string;
   state: 'output-available';
@@ -55,5 +63,11 @@ export type ToolPartWithOutput = {
     search_params?: SearchParams;
     pointsyeah_hotel_data?: PointsYeahHotelResponse;
     hotel_search_params?: HotelSearchInput;
+    // DateTime tool output
+    success?: boolean;
+    result?: string;
+    error?: string;
+    operation?: string;
+    timestamp?: string;
   };
 };

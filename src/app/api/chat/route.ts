@@ -7,10 +7,15 @@ import { getCurrentSystemPrompt } from '@/lib/system-prompt';
 import { pointsYeahFlightSearchTool } from '@/lib/pointsyeah/flight-tool';
 // import { hotelSearchTool } from '@/lib/hotel-tool'; // Using PointsYeah version instead
 import { pointsYeahHotelSearchTool } from '@/lib/pointsyeah/hotel-tool';
+import { datetimeTool } from '@/lib/datetime-tool';
 
 export async function POST(req: Request) {
   try {
     const { messages }: { messages: UIMessage[] } = await req.json();
+
+    // Get user timezone from headers
+    const userTimezone = req.headers.get('X-User-Timezone') || 'UTC';
+    console.log('User timezone from headers:', userTimezone);
 
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     const modelName = process.env.GOOGLE_MODEL_NAME || 'gemini-2.5-flash';
@@ -35,14 +40,15 @@ export async function POST(req: Request) {
     // Create the stream with system prompt and tools
     const result = streamText({
       model,
-      system: getCurrentSystemPrompt(),
+      system: getCurrentSystemPrompt(userTimezone),
       messages: modelMessages,
       temperature: 0.5,
       tools: {
-        // flightSearch: flightSearchTool, // Temporarily disabled
+        // Primary travel search tools - should be prioritized
         pointsYeahFlightSearch: pointsYeahFlightSearchTool,
-        // hotelSearch: hotelSearchTool, // Using PointsYeah version instead
         pointsYeahHotelSearch: pointsYeahHotelSearchTool,
+        // Utility tools - should be used only when specifically needed
+        datetimeCalculator: datetimeTool,
       },
     });
 
