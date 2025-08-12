@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { MessageList } from '@/components/MessageList';
@@ -11,6 +11,7 @@ export default function Home() {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState('');
   const [originalMessages, setOriginalMessages] = useState<typeof messages>([]);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   const { messages, sendMessage, status, error, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -47,6 +48,25 @@ export default function Home() {
 
   const isLoading = status === 'submitted' || status === 'streaming';
 
+  // Auto-scroll to bottom function
+  const scrollToBottom = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
+  };
+
+  // Auto-scroll when messages change (new message received)
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Auto-scroll when status changes to streaming (user sent message)
+  useEffect(() => {
+    if (status === 'streaming') {
+      scrollToBottom();
+    }
+  }, [status]);
+
   const handleSendMessage = (text: string) => {
     // If we're editing, replace the message and regenerate from that point
     if (editingMessageId) {
@@ -59,11 +79,13 @@ export default function Home() {
         editedMessage.parts = [{ type: 'text' as const, text }];
         newMessages.push(editedMessage);
         
-        // Update messages and send the new message
-        setMessages(newMessages);
+        // Clear editing state first
         setEditingMessageId(null);
         setEditingContent('');
         setOriginalMessages([]);
+        
+        // Update messages and send the new message
+        setMessages(newMessages);
         
         // Send the message to get AI response
         setTimeout(() => {
@@ -124,7 +146,7 @@ export default function Home() {
           </p>
         </header>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg min-h-96 max-h-[70vh] mb-4 overflow-y-auto p-4">
+        <div ref={scrollContainerRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg min-h-96 max-h-[70vh] mb-4 overflow-y-auto p-4">
           <MessageList 
             messages={messages} 
             isLoading={isLoading} 
