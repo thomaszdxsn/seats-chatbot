@@ -1,218 +1,34 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { GoogleSearch } = require('google-search-results-nodejs');
+/**
+ * Unified Flight Search API Entry Point
+ * 
+ * This file provides a unified interface for flight search functionality.
+ * It currently uses SerpAPI as the default provider, with PointsYeah API as a future option.
+ */
 
-export interface FlightSearchParams {
-  departureId: string;
-  arrivalId: string;
-  outboundDate: string;
-  returnDate?: string;
-  type?: number; // 1=Round Trip, 2=One Way, 3=Multi City
-  currency?: string;
-  language?: string;
-  country?: string;
-}
+// Export types from the current provider
+export type { FlightSearchParams, FlightResult } from './serpapi/flight-api';
 
-export interface FlightResult {
-  departure_airport: {
-    id: string;
-    name: string;
-  };
-  arrival_airport: {
-    id: string;
-    name: string;
-  };
-  flights: Array<{
-    departure_airport: {
-      id: string;
-      name: string;
-      time: string;
-    };
-    arrival_airport: {
-      id: string;
-      name: string;
-      time: string;
-    };
-    duration: number;
-    airline: string;
-    airline_logo: string;
-    flight_number: string;
-    legroom?: string;
-    extensions?: string[];
-  }>;
-  price: number;
-  type: string;
-  book_link?: string;
-}
+// Import the implementation from the current provider
+import { searchFlights as serpApiSearchFlights } from './serpapi/flight-api';
+// import { searchFlights as pointsYeahSearchFlights } from './pointsyeah/flight-api';
 
-interface SerpApiFlightSegment {
-  departure_airport: {
-    name: string;
-    id: string;
-    time: string;
-  };
-  arrival_airport: {
-    name: string;
-    id: string;
-    time: string;
-  };
-  duration: number;
-  airplane?: string;
-  airline: string;
-  airline_logo: string;
-  travel_class: string;
-  flight_number: string;
-  legroom?: string;
-  extensions?: string[];
-  overnight?: boolean;
-  often_delayed_by_over_30_min?: boolean;
-}
+// Configuration to switch between providers
+const FLIGHT_API_PROVIDER = process.env.FLIGHT_API_PROVIDER || 'serpapi';
 
-interface SerpApiLayover {
-  duration: number;
-  name: string;
-  id: string;
-  overnight?: boolean;
-}
-
-interface SerpApiCarbonEmissions {
-  this_flight: number;
-  typical_for_this_route: number;
-  difference_percent: number;
-}
-
-interface SerpApiFlightOption {
-  flights: SerpApiFlightSegment[];
-  layovers?: SerpApiLayover[];
-  total_duration: number;
-  carbon_emissions: SerpApiCarbonEmissions;
-  price?: number;
-  type: string;
-  airline_logo: string;
-  booking_token: string;
-}
-
-interface SerpApiResult {
-  error?: string;
-  best_flights?: SerpApiFlightOption[];
-  other_flights?: SerpApiFlightOption[];
-  price_insights?: {
-    lowest_price: number;
-    price_level: string;
-    typical_price_range: number[];
-    price_history: number[][];
-  };
-  airports?: Array<{
-    departure: Array<{
-      airport: {
-        id: string;
-        name: string;
-      };
-      city: string;
-      country: string;
-      country_code: string;
-      image?: string;
-      thumbnail?: string;
-    }>;
-    arrival: Array<{
-      airport: {
-        id: string;
-        name: string;
-      };
-      city: string;
-      country: string;
-      country_code: string;
-      image?: string;
-      thumbnail?: string;
-    }>;
-  }>;
-}
-
-export async function searchFlights(params: FlightSearchParams): Promise<FlightResult[]> {
-  const apiKey = process.env.SERPAPI_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('SERPAPI_API_KEY environment variable is not set');
+/**
+ * Unified flight search function that delegates to the configured provider
+ */
+export async function searchFlights(params: import('./serpapi/flight-api').FlightSearchParams): Promise<import('./serpapi/flight-api').FlightResult[]> {
+  switch (FLIGHT_API_PROVIDER) {
+    case 'serpapi':
+      return serpApiSearchFlights(params);
+    
+    case 'pointsyeah':
+      // TODO: Uncomment when PointsYeah implementation is ready
+      // return pointsYeahSearchFlights(params);
+      throw new Error('PointsYeah provider is not yet implemented');
+    
+    default:
+      throw new Error(`Unknown flight API provider: ${FLIGHT_API_PROVIDER}`);
   }
-
-  const search = new GoogleSearch(apiKey);
-
-  const searchParams = {
-    engine: 'google_flights',
-    departure_id: params.departureId,
-    arrival_id: params.arrivalId,
-    outbound_date: params.outboundDate,
-    ...(params.returnDate && { return_date: params.returnDate }),
-    ...(params.type && { type: params.type.toString() }),
-    currency: params.currency || 'USD',
-    hl: params.language || 'en',
-    gl: params.country || 'us'
-  };
-
-  console.log({ searchParams })
-
-  return new Promise((resolve, reject) => {
-    search.json(searchParams, (result: SerpApiResult) => {
-      if (result.error) {
-        reject(new Error(`SerpAPI error: ${result.error}`));
-        return;
-      }
-
-      const allFlights = [
-        ...(result.best_flights || []),
-        ...(result.other_flights || [])
-      ];
-
-
-      if (allFlights.length === 0) {
-        resolve([]);
-        return;
-      }
-
-      const flights: FlightResult[] = allFlights.map((flightOption) => {
-        // Add defensive checks for undefined properties
-        if (!flightOption || !flightOption.flights || flightOption.flights.length === 0) {
-          console.error('FlightOption is invalid:', flightOption);
-          return null;
-        }
-
-        // Get the first and last flight segments to determine overall route
-        const firstFlight = flightOption.flights[0];
-        const lastFlight = flightOption.flights[flightOption.flights.length - 1];
-
-        return {
-          departure_airport: {
-            id: firstFlight.departure_airport?.id || 'unknown',
-            name: firstFlight.departure_airport?.name || 'Unknown Airport',
-          },
-          arrival_airport: {
-            id: lastFlight.arrival_airport?.id || 'unknown',
-            name: lastFlight.arrival_airport?.name || 'Unknown Airport',
-          },
-          flights: flightOption.flights.map(segment => ({
-            departure_airport: {
-              id: segment.departure_airport?.id || 'unknown',
-              name: segment.departure_airport?.name || 'Unknown Airport',
-              time: segment.departure_airport?.time || 'unknown',
-            },
-            arrival_airport: {
-              id: segment.arrival_airport?.id || 'unknown',
-              name: segment.arrival_airport?.name || 'Unknown Airport',
-              time: segment.arrival_airport?.time || 'unknown',
-            },
-            duration: segment.duration || 0,
-            airline: segment.airline || 'Unknown Airline',
-            airline_logo: segment.airline_logo || flightOption.airline_logo || '',
-            flight_number: segment.flight_number || 'unknown',
-            legroom: segment.legroom,
-            extensions: segment.extensions || [],
-          })),
-          price: flightOption.price || 0,
-          type: flightOption.type || 'unknown',
-          book_link: `https://www.google.com/travel/flights/booking?token=${flightOption.booking_token}`
-        };
-      }).filter(Boolean) as FlightResult[];
-
-      resolve(flights);
-    });
-  });
 }

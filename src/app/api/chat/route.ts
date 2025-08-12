@@ -4,6 +4,7 @@ import { convertUIMessagesToModelMessages, type UIMessage } from '@/lib/message-
 import { createErrorResponse, createErrorHttpResponse } from '@/lib/error-handler';
 import { getCurrentSystemPrompt } from '@/lib/system-prompt';
 import { flightSearchTool } from '@/lib/flight-tool';
+import { hotelSearchTool } from '@/lib/hotel-tool';
 
 export async function POST(req: Request) {
   try {
@@ -37,6 +38,7 @@ export async function POST(req: Request) {
       temperature: 0.5,
       tools: {
         flightSearch: flightSearchTool,
+        hotelSearch: hotelSearchTool,
       },
     });
 

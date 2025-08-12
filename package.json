@@ -7,10 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:ci": "jest --ci --coverage --watchAll=false"
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:affected": "jest --passWithNoTests --findRelatedTests",
+    "prepare": "husky"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.3",
@@ -38,11 +42,24 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
+    "husky": "^9.1.7",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
+    "lint-staged": "^16.1.5",
     "msw": "^2.10.4",
+    "prettier": "^3.6.2",
     "tailwindcss": "^4",
     "typescript": "^5",
     "whatwg-fetch": "^3.6.20"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "bash -c 'pnpm lint'",
+      "bash -c 'pnpm typecheck'",
+      "pnpm test:affected"
+    ],
+    "*.{json,md,css}": [
+      "prettier --write"
+    ]
   }
 }

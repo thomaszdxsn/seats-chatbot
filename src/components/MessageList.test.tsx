@@ -88,7 +88,7 @@ describe('MessageList Component', () => {
         id: '3',
         role: 'assistant',
         parts: [
-          { type: 'dynamic-tool', toolName: 'flightSearch', toolCallId: 'call-123', state: 'input-streaming', input: {}, output: undefined, errorText: undefined } as TestToolPart
+          { type: 'dynamic-tool', toolName: 'flightSearch', toolCallId: 'call-123', state: 'input-streaming', input: undefined, output: undefined, errorText: undefined } as TestToolPart
         ]
       }
     ];
@@ -138,7 +138,7 @@ describe('MessageList Component', () => {
         id: '3',
         role: 'assistant',
         parts: [
-          { type: 'tool-flightSearch', toolCallId: 'call-static', state: 'input-streaming', input: {}, output: undefined, errorText: undefined } as TestToolPart
+          { type: 'tool-flightSearch', toolCallId: 'call-static', state: 'input-streaming', input: undefined, output: undefined, errorText: undefined } as TestToolPart
         ]
       }
     ];

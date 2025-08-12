@@ -26,6 +26,14 @@ jest.mock('../../../lib/flight-tool', () => ({
   },
 }))
 
+jest.mock('../../../lib/hotel-tool', () => ({
+  hotelSearchTool: {
+    description: 'Mock hotel search tool',
+    inputSchema: {},
+    execute: jest.fn(),
+  },
+}))
+
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { streamText } from 'ai'
 
@@ -152,6 +160,7 @@ describe('/api/chat', () => {
       temperature: 0.5,
       tools: {
         flightSearch: expect.any(Object),
+        hotelSearch: expect.any(Object),
       },
     })
   })
