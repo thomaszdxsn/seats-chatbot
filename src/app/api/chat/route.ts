@@ -3,7 +3,8 @@ import { getProxyConfiguration, createGoogleAIClient } from '@/lib/proxy-config'
 import { convertUIMessagesToModelMessages, type UIMessage } from '@/lib/message-converter';
 import { createErrorResponse, createErrorHttpResponse } from '@/lib/error-handler';
 import { getCurrentSystemPrompt } from '@/lib/system-prompt';
-import { flightSearchTool } from '@/lib/flight-tool';
+// import { flightSearchTool } from '@/lib/flight-tool'; // Temporarily disabled
+import { pointsYeahFlightSearchTool } from '@/lib/pointsyeah/flight-tool';
 import { hotelSearchTool } from '@/lib/hotel-tool';
 
 export async function POST(req: Request) {
@@ -37,7 +38,8 @@ export async function POST(req: Request) {
       messages: modelMessages,
       temperature: 0.5,
       tools: {
-        flightSearch: flightSearchTool,
+        // flightSearch: flightSearchTool, // Temporarily disabled
+        pointsYeahFlightSearch: pointsYeahFlightSearchTool,
         hotelSearch: hotelSearchTool,
       },
     });

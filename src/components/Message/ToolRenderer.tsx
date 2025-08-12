@@ -1,39 +1,134 @@
 import { FlightResults } from './FlightResults';
-import { ToolPartWithOutput } from './types';
+import PointsYeahResults from './PointsYeahResults';
+import { LoadingIndicator } from './LoadingIndicator';
+import { ToolPartWithOutput, type SearchParams } from './types';
+import type { PointsYeahResponse } from '@/lib/pointsyeah/flight-api';
 
 interface ToolRendererProps {
-  toolParts: { type: string; toolName?: string; state?: string; toolCallId?: string; output?: { flights?: unknown[]; summary?: string } }[];
+  toolParts: { 
+    type: string; 
+    toolName?: string; 
+    state?: string; 
+    toolCallId?: string; 
+    output?: { 
+      flights?: unknown[]; 
+      summary?: string;
+      pointsyeah_data?: PointsYeahResponse;
+      search_params?: SearchParams;
+    } 
+  }[];
 }
 
 export function ToolRenderer({ toolParts }: ToolRendererProps) {
   return (
     <>
       {toolParts.map((part, index) => {
-        // Handle dynamic tool parts
+        // Handle PointsYeah flight search tool (dynamic) - Loading state
         if (part.type === 'dynamic-tool' && 'toolName' in part && 
-            part.toolName === 'flightSearch' && 'state' in part && 
-            part.state === 'output-available') {
-          const dynamicPart = part as ToolPartWithOutput;
-          return (
-            <FlightResults
-              key={`tool-${dynamicPart.toolCallId || index}`}
-              flights={dynamicPart.output?.flights || []}
-              summary={dynamicPart.output?.summary}
-            />
-          );
+            part.toolName === 'pointsYeahFlightSearch' && 'state' in part) {
+          
+          // Show loading state when tool is being executed
+          if (part.state === 'call' || part.state === 'executing') {
+            return (
+              <div key={`tool-loading-${part.toolCallId || index}`} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                <LoadingIndicator message="Searching for reward flights..." />
+              </div>
+            );
+          }
+          
+          // Show results when output is available
+          if (part.state === 'output-available') {
+            const dynamicPart = part as ToolPartWithOutput;
+            if (dynamicPart.output?.pointsyeah_data) {
+              return (
+                <PointsYeahResults
+                  key={`tool-${dynamicPart.toolCallId || index}`}
+                  data={dynamicPart.output.pointsyeah_data}
+                  searchParams={dynamicPart.output.search_params}
+                />
+              );
+            }
+          }
         }
-        // Handle static tool parts (tool-flightSearch)
-        if (part.type === 'tool-flightSearch' && 'state' in part && 
-            part.state === 'output-available') {
-          const toolPart = part as ToolPartWithOutput;
-          return (
-            <FlightResults
-              key={`tool-${toolPart.toolCallId || index}`}
-              flights={toolPart.output?.flights || []}
-              summary={toolPart.output?.summary}
-            />
-          );
+        
+        // Handle PointsYeah flight search tool (static)
+        if (part.type === 'tool-pointsYeahFlightSearch' && 'state' in part) {
+          
+          // Show loading state when tool is being executed
+          if (part.state === 'call' || part.state === 'executing') {
+            return (
+              <div key={`tool-loading-${part.toolCallId || index}`} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                <LoadingIndicator message="Searching for reward flights..." />
+              </div>
+            );
+          }
+          
+          // Show results when output is available
+          if (part.state === 'output-available') {
+            const toolPart = part as ToolPartWithOutput;
+            if (toolPart.output?.pointsyeah_data) {
+              return (
+                <PointsYeahResults
+                  key={`tool-${toolPart.toolCallId || index}`}
+                  data={toolPart.output.pointsyeah_data}
+                  searchParams={toolPart.output.search_params}
+                />
+              );
+            }
+          }
         }
+        
+        // Handle legacy flight search tool (dynamic) - temporarily disabled
+        if (part.type === 'dynamic-tool' && 'toolName' in part && 
+            part.toolName === 'flightSearch' && 'state' in part) {
+          
+          // Show loading state when tool is being executed
+          if (part.state === 'call' || part.state === 'executing') {
+            return (
+              <div key={`tool-loading-${part.toolCallId || index}`} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                <LoadingIndicator message="Searching for flights..." />
+              </div>
+            );
+          }
+          
+          // Show results when output is available
+          if (part.state === 'output-available') {
+            const dynamicPart = part as ToolPartWithOutput;
+            return (
+              <FlightResults
+                key={`tool-${dynamicPart.toolCallId || index}`}
+                flights={dynamicPart.output?.flights || []}
+                summary={dynamicPart.output?.summary}
+              />
+            );
+          }
+        }
+        
+        // Handle legacy flight search tool (static) - temporarily disabled
+        if (part.type === 'tool-flightSearch' && 'state' in part) {
+          
+          // Show loading state when tool is being executed
+          if (part.state === 'call' || part.state === 'executing') {
+            return (
+              <div key={`tool-loading-${part.toolCallId || index}`} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                <LoadingIndicator message="Searching for flights..." />
+              </div>
+            );
+          }
+          
+          // Show results when output is available
+          if (part.state === 'output-available') {
+            const toolPart = part as ToolPartWithOutput;
+            return (
+              <FlightResults
+                key={`tool-${toolPart.toolCallId || index}`}
+                flights={toolPart.output?.flights || []}
+                summary={toolPart.output?.summary}
+              />
+            );
+          }
+        }
+        
         return null;
       })}
     </>

@@ -179,15 +179,14 @@ GOOGLE_GENERATIVE_AI_API_KEY=your_google_api_key_here
 # Optional: Defaults to gemini-2.5-flash
 GOOGLE_MODEL_NAME=gemini-2.5-flash
 
-# Optional: SerpAPI key for flight search functionality (current provider)
+# Optional: SerpAPI key for flight search functionality (legacy provider)
 # Get from https://serpapi.com/manage-api-key
 SERPAPI_KEY=your_serpapi_key_here
 
-# Optional: PointsYeah API key (future provider)
-# POINTSYEAH_API_KEY=your_pointsyeah_key_here
+# Note: PointsYeah API requires no API key - public access available
 
 # Optional: Provider configuration
-# FLIGHT_API_PROVIDER=serpapi  # Options: serpapi, pointsyeah (default: serpapi)
+# FLIGHT_API_PROVIDER=serpapi  # Options: serpapi, pointsyeah (default: pointsyeah)
 # HOTEL_API_PROVIDER=pointsyeah  # Options: pointsyeah (default: pointsyeah)
 
 # === PROXY CONFIGURATION FOR CHINA MAINLAND USERS ===

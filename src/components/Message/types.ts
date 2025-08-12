@@ -1,6 +1,7 @@
 /**
  * Type definitions for Message components
  */
+import type { PointsYeahResponse } from '@/lib/pointsyeah/flight-api';
 
 export interface FlightData {
   departure_airport?: { id: string; name: string };
@@ -19,11 +20,37 @@ export interface FlightData {
   book_link?: string;
 }
 
+export interface SearchParams {
+  departureId: string;
+  arrivalId: string;
+  outboundDate: string;
+  endDate?: string;  // Changed from returnDate to match API
+  banks?: string[];
+  programs?: string[];
+  cabins?: string[];
+  premium_cabin_percentage?: number;
+  max_points?: number;
+  min_points?: number;
+  max_duration?: number;
+  min_duration?: number;
+  max_tax?: number;
+  min_tax?: number;
+  trip?: string;
+  sort?: string;
+  seats?: number;
+  weekend_only?: boolean;
+  collection?: boolean;
+  page?: number;
+  page_size?: number;
+}
+
 export type ToolPartWithOutput = {
   toolCallId: string;
   state: 'output-available';
   output?: {
     flights?: FlightData[];
     summary?: string;
+    pointsyeah_data?: PointsYeahResponse;
+    search_params?: SearchParams;
   };
 };
