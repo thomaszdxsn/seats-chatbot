@@ -18,17 +18,17 @@ jest.mock('socks-proxy-agent', () => ({
   SocksProxyAgent: jest.fn(),
 }))
 
-jest.mock('../../../lib/flight-tool', () => ({
-  flightSearchTool: {
-    description: 'Mock flight search tool',
+jest.mock('../../../lib/pointsyeah/flight-tool', () => ({
+  pointsYeahFlightSearchTool: {
+    description: 'Mock PointsYeah flight search tool',
     inputSchema: {},
     execute: jest.fn(),
   },
 }))
 
-jest.mock('../../../lib/hotel-tool', () => ({
-  hotelSearchTool: {
-    description: 'Mock hotel search tool',
+jest.mock('../../../lib/pointsyeah/hotel-tool', () => ({
+  pointsYeahHotelSearchTool: {
+    description: 'Mock PointsYeah hotel search tool',
     inputSchema: {},
     execute: jest.fn(),
   },
@@ -159,8 +159,8 @@ describe('/api/chat', () => {
       messages: testMessages,
       temperature: 0.5,
       tools: {
-        flightSearch: expect.any(Object),
-        hotelSearch: expect.any(Object),
+        pointsYeahFlightSearch: expect.any(Object),
+        pointsYeahHotelSearch: expect.any(Object),
       },
     })
   })

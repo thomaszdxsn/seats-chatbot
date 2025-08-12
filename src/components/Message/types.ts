@@ -2,6 +2,7 @@
  * Type definitions for Message components
  */
 import type { PointsYeahResponse } from '@/lib/pointsyeah/flight-api';
+import type { PointsYeahHotelResponse, HotelSearchInput } from '@/lib/pointsyeah/hotel-api';
 
 export interface FlightData {
   departure_airport?: { id: string; name: string };
@@ -52,5 +53,7 @@ export type ToolPartWithOutput = {
     summary?: string;
     pointsyeah_data?: PointsYeahResponse;
     search_params?: SearchParams;
+    pointsyeah_hotel_data?: PointsYeahHotelResponse;
+    hotel_search_params?: HotelSearchInput;
   };
 };

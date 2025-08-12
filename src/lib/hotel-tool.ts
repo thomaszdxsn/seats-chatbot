@@ -6,7 +6,7 @@
  */
 
 // Import the implementation from PointsYeah provider
-import { hotelSearchTool as pointsYeahHotelSearchTool } from './pointsyeah/hotel-tool';
+import { pointsYeahHotelSearchTool } from './pointsyeah/hotel-tool';
 
 // Configuration to switch between providers (if more are added in the future)
 const HOTEL_API_PROVIDER = process.env.HOTEL_API_PROVIDER || 'pointsyeah';

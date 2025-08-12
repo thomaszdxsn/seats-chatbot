@@ -75,9 +75,21 @@ export const getToolLoadingMessage = (activeToolParts: { type: string; toolName?
   
   for (const part of activeToolParts) {
     if (part.type === 'dynamic-tool' && 'toolName' in part) {
+      if (part.toolName === 'pointsYeahFlightSearch') {
+        return 'Searching for reward flights...';
+      }
+      if (part.toolName === 'pointsYeahHotelSearch') {
+        return 'Searching for reward hotels...';
+      }
       if (part.toolName === 'flightSearch') {
         return 'Searching for flights...';
       }
+    }
+    if (part.type === 'tool-pointsYeahFlightSearch') {
+      return 'Searching for reward flights...';
+    }
+    if (part.type === 'tool-pointsYeahHotelSearch') {
+      return 'Searching for reward hotels...';
     }
     if (part.type === 'tool-flightSearch') {
       return 'Searching for flights...';

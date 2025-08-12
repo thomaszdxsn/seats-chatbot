@@ -5,7 +5,8 @@ import { createErrorResponse, createErrorHttpResponse } from '@/lib/error-handle
 import { getCurrentSystemPrompt } from '@/lib/system-prompt';
 // import { flightSearchTool } from '@/lib/flight-tool'; // Temporarily disabled
 import { pointsYeahFlightSearchTool } from '@/lib/pointsyeah/flight-tool';
-import { hotelSearchTool } from '@/lib/hotel-tool';
+// import { hotelSearchTool } from '@/lib/hotel-tool'; // Using PointsYeah version instead
+import { pointsYeahHotelSearchTool } from '@/lib/pointsyeah/hotel-tool';
 
 export async function POST(req: Request) {
   try {
@@ -40,7 +41,8 @@ export async function POST(req: Request) {
       tools: {
         // flightSearch: flightSearchTool, // Temporarily disabled
         pointsYeahFlightSearch: pointsYeahFlightSearchTool,
-        hotelSearch: hotelSearchTool,
+        // hotelSearch: hotelSearchTool, // Using PointsYeah version instead
+        pointsYeahHotelSearch: pointsYeahHotelSearchTool,
       },
     });
 
