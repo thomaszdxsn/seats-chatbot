@@ -99,7 +99,9 @@ describe('ToolCallIndicator', () => {
     );
     
     const indicator = container.firstChild as HTMLElement;
-    expect(indicator).toHaveClass('bg-blue-50', 'dark:bg-blue-900/20', 'border-blue-300');
+    expect(indicator).toHaveClass('bg-blue-50');
+    expect(indicator).toHaveClass('dark:bg-blue-900/20');
+    expect(indicator).toHaveClass('border-blue-300');
   });
 
   it('applies correct CSS classes for completed state', () => {
@@ -111,6 +113,8 @@ describe('ToolCallIndicator', () => {
     );
     
     const indicator = container.firstChild as HTMLElement;
-    expect(indicator).toHaveClass('bg-green-50', 'dark:bg-green-900/20', 'border-green-300');
+    expect(indicator).toHaveClass('bg-green-50');
+    expect(indicator).toHaveClass('dark:bg-green-900/20');
+    expect(indicator).toHaveClass('border-green-300');
   });
 });
