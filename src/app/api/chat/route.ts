@@ -37,19 +37,31 @@ export async function POST(req: Request) {
     // Convert UI messages to model messages format
     const modelMessages = convertUIMessagesToModelMessages(messages);
 
-    // Create the stream with system prompt and tools
+    // Check if this is a summary request (last user message asks for summary/analysis)
+    const lastUserMessage = messages.filter(m => m.role === 'user').pop();
+    const lastUserText = lastUserMessage?.parts?.[0]?.text?.toLowerCase() || '';
+    const isSummaryRequest = lastUserText.includes('summary') || 
+                            lastUserText.includes('analysis') || 
+                            lastUserText.includes('provide a comprehensive') ||
+                            lastUserText.includes('analyze') ||
+                            lastUserText.includes('results table');
+
+    // If this is a summary request, don't provide tools so AI focuses on summarizing
+    const tools = isSummaryRequest ? undefined : {
+      // Primary travel search tools - should be prioritized
+      pointsYeahFlightSearch: pointsYeahFlightSearchTool,
+      pointsYeahHotelSearch: pointsYeahHotelSearchTool,
+      // Utility tools - should be used only when specifically needed
+      datetimeCalculator: datetimeTool,
+    };
+
+    // Create the stream with system prompt and conditional tools
     const result = streamText({
       model,
       system: getCurrentSystemPrompt(userTimezone),
       messages: modelMessages,
       temperature: 0.5,
-      tools: {
-        // Primary travel search tools - should be prioritized
-        pointsYeahFlightSearch: pointsYeahFlightSearchTool,
-        pointsYeahHotelSearch: pointsYeahHotelSearchTool,
-        // Utility tools - should be used only when specifically needed
-        datetimeCalculator: datetimeTool,
-      },
+      tools,
     });
 
     // Return streaming response

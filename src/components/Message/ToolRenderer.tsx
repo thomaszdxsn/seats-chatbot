@@ -2,7 +2,7 @@ import { FlightResults } from './FlightResults';
 import PointsYeahResults from './PointsYeahResults';
 import PointsYeahHotelResults from './PointsYeahHotelResults';
 import { DateTimeResults } from './DateTimeResults';
-import { ToolCallIndicator } from './ToolCallIndicator';
+import { CollapsibleToolIndicator } from './CollapsibleToolIndicator';
 import { LoadingIndicator } from './LoadingIndicator'; // Keep for legacy tools
 import { ToolPartWithOutput, type SearchParams } from './types';
 import type { PointsYeahResponse } from '@/lib/pointsyeah/flight-api';
@@ -42,7 +42,7 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
           // Show loading state when tool is being executed
           if (part.state === 'call' || part.state === 'executing') {
             return (
-              <ToolCallIndicator 
+              <CollapsibleToolIndicator 
                 key={`tool-loading-${part.toolCallId || index}`}
                 toolName="pointsYeahFlightSearch"
                 isLoading={true}
@@ -50,21 +50,22 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
             );
           }
           
-          // Show results when output is available - with persistent indicator
+          // Show results when output is available - with collapsible indicator
           if (part.state === 'output-available') {
             const dynamicPart = part as ToolPartWithOutput;
             if (dynamicPart.output?.pointsyeah_data) {
               return (
-                <div key={`tool-${dynamicPart.toolCallId || index}`}>
-                  <ToolCallIndicator 
-                    toolName="pointsYeahFlightSearch"
-                    isCompleted={true}
-                  />
+                <CollapsibleToolIndicator 
+                  key={`tool-${dynamicPart.toolCallId || index}`}
+                  toolName="pointsYeahFlightSearch"
+                  isCompleted={true}
+                  defaultExpanded={false}
+                >
                   <PointsYeahResults
                     data={dynamicPart.output.pointsyeah_data}
                     searchParams={dynamicPart.output.search_params}
                   />
-                </div>
+                </CollapsibleToolIndicator>
               );
             }
           }
@@ -76,7 +77,7 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
           // Show loading state when tool is being executed
           if (part.state === 'call' || part.state === 'executing') {
             return (
-              <ToolCallIndicator 
+              <CollapsibleToolIndicator 
                 key={`tool-loading-${part.toolCallId || index}`}
                 toolName="pointsYeahFlightSearch"
                 isLoading={true}
@@ -84,21 +85,22 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
             );
           }
           
-          // Show results when output is available - with persistent indicator
+          // Show results when output is available - with collapsible indicator
           if (part.state === 'output-available') {
             const toolPart = part as ToolPartWithOutput;
             if (toolPart.output?.pointsyeah_data) {
               return (
-                <div key={`tool-${toolPart.toolCallId || index}`}>
-                  <ToolCallIndicator 
-                    toolName="pointsYeahFlightSearch"
-                    isCompleted={true}
-                  />
+                <CollapsibleToolIndicator 
+                  key={`tool-${toolPart.toolCallId || index}`}
+                  toolName="pointsYeahFlightSearch"
+                  isCompleted={true}
+                  defaultExpanded={false}
+                >
                   <PointsYeahResults
                     data={toolPart.output.pointsyeah_data}
                     searchParams={toolPart.output.search_params}
                   />
-                </div>
+                </CollapsibleToolIndicator>
               );
             }
           }
@@ -162,7 +164,7 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
           // Show loading state when tool is being executed
           if (part.state === 'call' || part.state === 'executing') {
             return (
-              <ToolCallIndicator 
+              <CollapsibleToolIndicator 
                 key={`tool-loading-${part.toolCallId || index}`}
                 toolName="pointsYeahHotelSearch"
                 isLoading={true}
@@ -170,21 +172,22 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
             );
           }
           
-          // Show results when output is available - with persistent indicator
+          // Show results when output is available - with collapsible indicator
           if (part.state === 'output-available') {
             const dynamicPart = part as ToolPartWithOutput;
             if (dynamicPart.output?.pointsyeah_hotel_data) {
               return (
-                <div key={`tool-${dynamicPart.toolCallId || index}`}>
-                  <ToolCallIndicator 
-                    toolName="pointsYeahHotelSearch"
-                    isCompleted={true}
-                  />
+                <CollapsibleToolIndicator 
+                  key={`tool-${dynamicPart.toolCallId || index}`}
+                  toolName="pointsYeahHotelSearch"
+                  isCompleted={true}
+                  defaultExpanded={false}
+                >
                   <PointsYeahHotelResults
                     data={dynamicPart.output.pointsyeah_hotel_data}
                     searchParams={dynamicPart.output.hotel_search_params}
                   />
-                </div>
+                </CollapsibleToolIndicator>
               );
             }
           }
@@ -196,7 +199,7 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
           // Show loading state when tool is being executed
           if (part.state === 'call' || part.state === 'executing') {
             return (
-              <ToolCallIndicator 
+              <CollapsibleToolIndicator 
                 key={`tool-loading-${part.toolCallId || index}`}
                 toolName="pointsYeahHotelSearch"
                 isLoading={true}
@@ -204,21 +207,22 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
             );
           }
           
-          // Show results when output is available - with persistent indicator
+          // Show results when output is available - with collapsible indicator
           if (part.state === 'output-available') {
             const toolPart = part as ToolPartWithOutput;
             if (toolPart.output?.pointsyeah_hotel_data) {
               return (
-                <div key={`tool-${toolPart.toolCallId || index}`}>
-                  <ToolCallIndicator 
-                    toolName="pointsYeahHotelSearch"
-                    isCompleted={true}
-                  />
+                <CollapsibleToolIndicator 
+                  key={`tool-${toolPart.toolCallId || index}`}
+                  toolName="pointsYeahHotelSearch"
+                  isCompleted={true}
+                  defaultExpanded={false}
+                >
                   <PointsYeahHotelResults
                     data={toolPart.output.pointsyeah_hotel_data}
                     searchParams={toolPart.output.hotel_search_params}
                   />
-                </div>
+                </CollapsibleToolIndicator>
               );
             }
           }
@@ -231,7 +235,7 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
           // Show loading state when tool is being executed
           if (part.state === 'call' || part.state === 'executing') {
             return (
-              <ToolCallIndicator 
+              <CollapsibleToolIndicator 
                 key={`tool-loading-${part.toolCallId || index}`}
                 toolName="datetimeCalculator"
                 isLoading={true}
@@ -239,16 +243,17 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
             );
           }
           
-          // Show results when output is available - with persistent indicator
+          // Show results when output is available - with collapsible indicator
           if (part.state === 'output-available') {
             const dynamicPart = part as ToolPartWithOutput;
             if (dynamicPart.output && dynamicPart.output.operation) {
               return (
-                <div key={`tool-${dynamicPart.toolCallId || index}`}>
-                  <ToolCallIndicator 
-                    toolName="datetimeCalculator"
-                    isCompleted={true}
-                  />
+                <CollapsibleToolIndicator 
+                  key={`tool-${dynamicPart.toolCallId || index}`}
+                  toolName="datetimeCalculator"
+                  isCompleted={true}
+                  defaultExpanded={false}
+                >
                   <DateTimeResults
                     data={{
                       success: dynamicPart.output.success || false,
@@ -258,7 +263,7 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
                       timestamp: dynamicPart.output.timestamp || new Date().toISOString()
                     }}
                   />
-                </div>
+                </CollapsibleToolIndicator>
               );
             }
           }
@@ -270,7 +275,7 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
           // Show loading state when tool is being executed
           if (part.state === 'call' || part.state === 'executing') {
             return (
-              <ToolCallIndicator 
+              <CollapsibleToolIndicator 
                 key={`tool-loading-${part.toolCallId || index}`}
                 toolName="datetimeCalculator"
                 isLoading={true}
@@ -278,16 +283,17 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
             );
           }
           
-          // Show results when output is available - with persistent indicator
+          // Show results when output is available - with collapsible indicator
           if (part.state === 'output-available') {
             const toolPart = part as ToolPartWithOutput;
             if (toolPart.output && toolPart.output.operation) {
               return (
-                <div key={`tool-${toolPart.toolCallId || index}`}>
-                  <ToolCallIndicator 
-                    toolName="datetimeCalculator"
-                    isCompleted={true}
-                  />
+                <CollapsibleToolIndicator 
+                  key={`tool-${toolPart.toolCallId || index}`}
+                  toolName="datetimeCalculator"
+                  isCompleted={true}
+                  defaultExpanded={false}
+                >
                   <DateTimeResults
                     data={{
                       success: toolPart.output.success || false,
@@ -297,7 +303,7 @@ export function ToolRenderer({ toolParts }: ToolRendererProps) {
                       timestamp: toolPart.output.timestamp || new Date().toISOString()
                     }}
                   />
-                </div>
+                </CollapsibleToolIndicator>
               );
             }
           }

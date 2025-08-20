@@ -1,6 +1,7 @@
 'use client';
 
 import { Message } from './Message';
+import { ThinkingIndicator } from './ThinkingIndicator';
 import type { UIMessage } from 'ai';
 
 type MessageData = UIMessage;
@@ -11,6 +12,7 @@ interface MessageListProps {
   onCopy?: (content: string) => void;
   onEdit?: (messageId: string, content: string) => void;
   onResend?: (messageId: string, content: string) => void;
+  // Removed thinkingPhases - now using real AI thinking content
 }
 
 function LoadingIndicator() {
@@ -62,8 +64,27 @@ export function MessageList({ messages, isLoading, onCopy, onEdit, onResend }: M
     }) || false;
   };
 
-  // Only show global loading if we're loading but don't have active tool calls
-  const showGlobalLoading = isLoading && !hasActiveToolCalls();
+  // Check if we should show thinking indicator
+  const showThinkingIndicator = () => {
+    if (!isLoading) return false;
+    
+    // Show thinking when loading but no active tool calls and no streaming content yet
+    if (hasActiveToolCalls()) return false;
+    
+    // If the last message is from assistant and it's empty/minimal content, show thinking
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage?.role === 'assistant') {
+      const hasContent = lastMessage.parts?.some(part => 
+        part.type === 'text' && part.text && part.text.trim().length > 0
+      );
+      return !hasContent;
+    }
+    
+    return true;
+  };
+
+  // Only show global loading if we're loading but not showing thinking indicator
+  const showGlobalLoading = isLoading && !showThinkingIndicator() && !hasActiveToolCalls();
 
   return (
     <div className="space-y-4">
@@ -78,6 +99,7 @@ export function MessageList({ messages, isLoading, onCopy, onEdit, onResend }: M
           onResend={onResend}
         />
       ))}
+      {showThinkingIndicator() && <ThinkingIndicator />}
       {showGlobalLoading && <LoadingIndicator />}
     </div>
   );

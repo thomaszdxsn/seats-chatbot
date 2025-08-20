@@ -56,6 +56,13 @@ export default function Home() {
   });
 
   const isLoading = status === 'submitted' || status === 'streaming';
+  
+  // Track whether we've already sent a summary request for the latest tool result
+  const [processedToolCalls, setProcessedToolCalls] = useState<Set<string>>(new Set());
+  
+  // Removed auto summary message tracking - using content-based filtering instead
+  
+  // Removed thinking phases - now using real AI thinking content from <thinking> tags
 
   // Auto-scroll to bottom function
   const scrollToBottom = () => {
@@ -75,6 +82,43 @@ export default function Home() {
       scrollToBottom();
     }
   }, [status]);
+
+  // Check for completed tool calls and auto-trigger summary
+  useEffect(() => {
+    // Don't process if we're currently loading or if there are no messages
+    if (isLoading || messages.length === 0) return;
+    
+    // Find the last assistant message
+    const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop();
+    if (!lastAssistantMessage) return;
+    
+    // Check if this message contains completed tool calls
+    const hasCompletedTools = lastAssistantMessage.parts?.some(part => 
+      part.type === 'dynamic-tool' && 'state' in part && part.state === 'output-available' ||
+      part.type?.startsWith('tool-') && 'state' in part && part.state === 'output-available'
+    );
+    
+    // If we found completed tool calls, check if we haven't processed them yet
+    if (hasCompletedTools) {
+      const messageId = lastAssistantMessage.id;
+      
+      // Only send summary request if we haven't processed this message's tools yet
+      if (!processedToolCalls.has(messageId)) {
+        // Mark this message as processed
+        setProcessedToolCalls(prev => new Set([...prev, messageId]));
+        
+        // Send summary request after a short delay to ensure tool rendering is complete
+        setTimeout(() => {
+          const summaryText = "Please provide a comprehensive summary and analysis of the search results above. Include key findings, recommendations, and a detailed results table.";
+          
+          // Send the message
+          sendMessage({ text: summaryText });
+        }, 500);
+      }
+    }
+  }, [messages, isLoading, processedToolCalls, sendMessage]);
+  
+  // Removed summary monitoring - thinking content now comes from AI's <thinking> tags
 
   const handleSendMessage = (text: string) => {
     // If we're editing, replace the message and regenerate from that point
@@ -157,7 +201,15 @@ export default function Home() {
 
         <div ref={scrollContainerRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg min-h-96 max-h-[70vh] mb-4 overflow-y-auto p-4">
           <MessageList 
-            messages={messages} 
+            messages={messages.filter(msg => {
+              // Hide auto-sent summary requests
+              if (msg.role === 'user') {
+                const firstPart = msg.parts?.[0];
+                return !(firstPart?.type === 'text' && 
+                        firstPart.text?.includes('Please provide a comprehensive summary and analysis'));
+              }
+              return true;
+            })} 
             isLoading={isLoading} 
             onCopy={handleCopy}
             onEdit={handleEdit}

@@ -5,6 +5,7 @@ import { MessageActions } from './MessageActions';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { LoadingIndicator } from './LoadingIndicator';
 import { ToolRenderer } from './ToolRenderer';
+import { ThinkingRenderer } from './ThinkingRenderer';
 import {
   extractTextContent,
   extractToolPartsWithOutput,
@@ -35,13 +36,35 @@ export function Message({ id, role, parts = [], onCopy, onEdit, onResend }: Mess
       return <span>{messageContent || 'No content'}</span>;
     }
 
+    // Process thinking content separately
+    const hasThinking = messageContent?.includes('<thinking>');
+    let thinkingContent = '';
+    let cleanContent = messageContent;
+    
+    if (hasThinking && messageContent) {
+      // Extract thinking content
+      const thinkingMatch = messageContent.match(/<thinking>[\s\S]*?<\/thinking>/);
+      if (thinkingMatch) {
+        thinkingContent = thinkingMatch[0];
+        // Remove thinking tags from the main content
+        cleanContent = messageContent.replace(/<thinking>[\s\S]*?<\/thinking>/g, '').trim();
+      }
+    }
+
     return (
       <div className="space-y-3">
-        {messageContent && (
-          <MarkdownRenderer content={messageContent} />
+        {/* Render thinking content first */}
+        {thinkingContent && (
+          <ThinkingRenderer content={thinkingContent} />
         )}
         
+        {/* Render tool parts */}
         <ToolRenderer toolParts={toolParts} />
+        
+        {/* Render clean content (without thinking tags) */}
+        {cleanContent && (
+          <MarkdownRenderer content={cleanContent} />
+        )}
         
         {/* Show tool loading message or "No content" only if there's no text and no tool results */}
         {!messageContent && toolParts.length === 0 && (
